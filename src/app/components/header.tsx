@@ -19,7 +19,7 @@ export default function Header() {
                         <a href="/" className="text-gray-700 hover:text-black font-medium transition-colors duration-150 pb-1 border-b-2 border-transparent hover:border-black">Home</a>
                     </li>
                     <li>
-                        <a href="/about" className="text-gray-700 hover:text-black font-medium transition-colors duration-150 pb-1 border-b-2 border-transparent hover:border-black">About</a>
+                        <a href="#how" className="text-gray-700 hover:text-black font-medium transition-colors duration-150 pb-1 border-b-2 border-transparent hover:border-black">How It Works?</a>
                     </li>
                     <li>
                         <a href="/contact" className="text-gray-700 hover:text-black font-medium transition-colors duration-150 pb-1 border-b-2 border-transparent hover:border-black">Pricing</a>
