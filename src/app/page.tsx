@@ -7,7 +7,7 @@ export default function Home() {
       <Header />
       
       {/* Hero Section */}
-      <section className="pt-20 pb-32 px-4 sm:px-6 lg:px-8">
+      <section id="hero" className="pt-20 pb-32 px-4 sm:px-6 lg:px-8">
         <div className="max-w-7xl mx-auto">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
             <div className="text-center lg:text-left">
@@ -159,6 +159,149 @@ export default function Home() {
                 </button>
               </div>
             </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Pricing Section */}
+      <section className="py-20 bg-gray-50">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-16">
+            <h2 className="text-4xl font-bold text-black mb-4">
+              Simple, Transparent Pricing
+            </h2>
+            <p className="text-xl text-gray-600 max-w-3xl mx-auto">
+              Choose the plan that fits your needs. No hidden fees, no surprises.
+            </p>
+          </div>
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-4xl mx-auto">
+            {/* Free Plan */}
+            <div className="bg-white rounded-3xl p-8 border border-gray-200 shadow-lg hover:shadow-xl transition-shadow duration-300">
+              <div className="text-center mb-8">
+                <h3 className="text-2xl font-bold text-black mb-2">Free</h3>
+                <div className="text-5xl font-bold text-black mb-4">$0</div>
+                <p className="text-gray-600">Perfect for getting started</p>
+              </div>
+              
+              <ul className="space-y-4 mb-8">
+                <li className="flex items-center">
+                  <div className="w-5 h-5 bg-black rounded-full flex items-center justify-center mr-3">
+                    <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                    </svg>
+                  </div>
+                  <span className="text-gray-700">Up to 10 voice notes per month</span>
+                </li>
+                <li className="flex items-center">
+                  <div className="w-5 h-5 bg-black rounded-full flex items-center justify-center mr-3">
+                    <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                    </svg>
+                  </div>
+                  <span className="text-gray-700">Basic AI processing</span>
+                </li>
+                <li className="flex items-center">
+                  <div className="w-5 h-5 bg-black rounded-full flex items-center justify-center mr-3">
+                    <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                    </svg>
+                  </div>
+                  <span className="text-gray-700">Export to text</span>
+                </li>
+                <li className="flex items-center">
+                  <div className="w-5 h-5 bg-black rounded-full flex items-center justify-center mr-3">
+                    <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                    </svg>
+                  </div>
+                  <span className="text-gray-700">Email support</span>
+                </li>
+              </ul>
+              
+              <button className="w-full bg-gray-100 text-black py-3 px-6 rounded-lg font-semibold text-lg hover:bg-gray-200 transition-colors duration-200 border border-gray-300">
+                Get Started Free
+              </button>
+            </div>
+
+            {/* Pro Plan */}
+            <div className="bg-black rounded-3xl p-8 shadow-xl hover:shadow-2xl transition-shadow duration-300 relative">
+              <div className="absolute top-0 left-1/2 transform -translate-x-1/2 -translate-y-1/2">
+                <span className="bg-white text-black px-4 py-1 rounded-full text-sm font-semibold">
+                  Most Popular
+                </span>
+              </div>
+              
+              <div className="text-center mb-8">
+                <h3 className="text-2xl font-bold text-white mb-2">Pro</h3>
+                <div className="text-white mb-4">
+                  <span className="text-5xl font-bold">$9</span>
+                  <span className="text-gray-300 text-lg">/month</span>
+                </div>
+                <p className="text-gray-300">For power users and professionals</p>
+              </div>
+              
+              <ul className="space-y-4 mb-8">
+                <li className="flex items-center">
+                  <div className="w-5 h-5 bg-white rounded-full flex items-center justify-center mr-3">
+                    <svg className="w-3 h-3 text-black" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                    </svg>
+                  </div>
+                  <span className="text-gray-200">Unlimited voice notes</span>
+                </li>
+                <li className="flex items-center">
+                  <div className="w-5 h-5 bg-white rounded-full flex items-center justify-center mr-3">
+                    <svg className="w-3 h-3 text-black" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                    </svg>
+                  </div>
+                  <span className="text-gray-200">Advanced AI with 99% accuracy</span>
+                </li>
+                <li className="flex items-center">
+                  <div className="w-5 h-5 bg-white rounded-full flex items-center justify-center mr-3">
+                    <svg className="w-3 h-3 text-black" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                    </svg>
+                  </div>
+                  <span className="text-gray-200">Smart task prioritization</span>
+                </li>
+                <li className="flex items-center">
+                  <div className="w-5 h-5 bg-white rounded-full flex items-center justify-center mr-3">
+                    <svg className="w-3 h-3 text-black" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                    </svg>
+                  </div>
+                  <span className="text-gray-200">Export to multiple formats</span>
+                </li>
+                <li className="flex items-center">
+                  <div className="w-5 h-5 bg-white rounded-full flex items-center justify-center mr-3">
+                    <svg className="w-3 h-3 text-black" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                    </svg>
+                  </div>
+                  <span className="text-gray-200">Integrations with popular tools</span>
+                </li>
+                <li className="flex items-center">
+                  <div className="w-5 h-5 bg-white rounded-full flex items-center justify-center mr-3">
+                    <svg className="w-3 h-3 text-black" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                    </svg>
+                  </div>
+                  <span className="text-gray-200">Priority support</span>
+                </li>
+              </ul>
+              
+              <button className="w-full bg-white text-black py-3 px-6 rounded-lg font-semibold text-lg hover:bg-gray-100 hover:shadow-lg transform hover:-translate-y-0.5 transition-all duration-200">
+                Start Pro Trial
+              </button>
+            </div>
+          </div>
+          
+          <div className="text-center mt-12">
+            <p className="text-gray-600">
+              All plans include a 14-day free trial. No credit card required to start.
+            </p>
           </div>
         </div>
       </section>
