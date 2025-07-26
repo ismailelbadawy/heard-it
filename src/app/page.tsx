@@ -19,7 +19,7 @@ export default function LandingPage() {
             <span className="font-bold text-xl">HeardIt</span>
           </div>
         </Link>
-        <nav className="ml-auto flex gap-4 sm:gap-6">
+        <nav className="ml-auto hidden md:flex gap-4 sm:gap-6">
           <Link href="#features" className="text-sm font-medium hover:underline underline-offset-4">
             Features
           </Link>
@@ -30,12 +30,18 @@ export default function LandingPage() {
             Pricing
           </Link>
         </nav>
-        <div className="ml-4 flex gap-2">
+        <div className="ml-4 hidden sm:flex gap-2">
           <Button variant="ghost" size="sm">
             Sign In
           </Button>
           <Button size="sm">Get Started</Button>
         </div>
+        {/* Mobile menu button */}
+        <Button variant="ghost" size="sm" className="ml-auto md:hidden">
+          <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+          </svg>
+        </Button>
       </header>
 
       <main className="flex-1">
@@ -48,25 +54,25 @@ export default function LandingPage() {
                 AI-Powered Voice Processing
               </Badge>
               <div className="space-y-2">
-                <h1 className="text-3xl font-bold tracking-tighter sm:text-4xl md:text-5xl lg:text-6xl/none">
+                <h1 className="text-3xl font-bold tracking-tighter sm:text-4xl md:text-5xl lg:text-6xl/none max-w-4xl">
                   Turn Voice Notes Into
                   <span className="text-transparent bg-clip-text bg-gradient-to-r from-purple-600 to-pink-600">
                     {" "}
                     Actionable Tasks
                   </span>
                 </h1>
-                <p className="mx-auto max-w-[700px] text-muted-foreground md:text-xl">
+                <p className="mx-auto max-w-[700px] text-muted-foreground text-base sm:text-lg md:text-xl px-4 sm:px-0">
                   Transform your voice recordings into organized tasks, key insights, and actionable items with AI.
                   Never lose track of important ideas again.
                 </p>
               </div>
-              <div className="w-full max-w-md space-y-2">
-                <form className="flex gap-2">
+              <div className="w-full max-w-md space-y-2 px-4 sm:px-0">
+                <form className="flex flex-col sm:flex-row gap-2">
                   <Input type="email" placeholder="Enter your email" className="flex-1" required />
                   <Button
                     type="submit"
                     size="lg"
-                    className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700"
+                    className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 w-full sm:w-auto"
                   >
                     <Mic className="mr-2 h-4 w-4" />
                     Join Waitlist
@@ -101,7 +107,7 @@ export default function LandingPage() {
                 </p>
               </div>
             </div>
-            <div className="mx-auto grid max-w-5xl items-start gap-6 py-12 lg:grid-cols-3 lg:gap-12">
+            <div className="mx-auto grid max-w-5xl items-start gap-6 py-12 sm:grid-cols-2 lg:grid-cols-3 lg:gap-12">
               <Card>
                 <CardHeader>
                   <CheckSquare className="h-10 w-10 text-purple-600" />
@@ -174,7 +180,7 @@ export default function LandingPage() {
                 </p>
               </div>
             </div>
-            <div className="mx-auto grid max-w-5xl items-start gap-8 py-12 lg:grid-cols-3 lg:gap-12">
+            <div className="mx-auto grid max-w-5xl items-start gap-8 py-12 sm:grid-cols-2 lg:grid-cols-3 lg:gap-12">
               <div className="flex flex-col items-center space-y-4 text-center">
                 <div className="flex h-16 w-16 items-center justify-center rounded-full bg-gradient-to-br from-purple-600 to-pink-600 text-white">
                   <span className="text-2xl font-bold">1</span>
@@ -218,7 +224,7 @@ export default function LandingPage() {
                 </p>
               </div>
             </div>
-            <div className="mx-auto grid max-w-5xl items-start gap-6 py-12 lg:grid-cols-2 lg:gap-12">
+            <div className="mx-auto grid max-w-5xl items-start gap-6 py-12 sm:grid-cols-1 lg:grid-cols-2 lg:gap-12">
               <Card>
                 <CardHeader>
                   <Users className="h-8 w-8 text-purple-600" />
@@ -281,7 +287,7 @@ export default function LandingPage() {
                 </p>
               </div>
             </div>
-            <div className="mx-auto grid max-w-5xl items-start gap-6 py-12 lg:grid-cols-3 lg:gap-8">
+            <div className="mx-auto grid max-w-5xl items-start gap-6 py-12 sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-3 lg:gap-8">
               {/* Free Plan */}
               <Card className="relative">
                 <CardHeader>
@@ -321,7 +327,7 @@ export default function LandingPage() {
                 <CardHeader>
                   <CardTitle className="text-2xl">Pro</CardTitle>
                   <div className="text-4xl font-bold">
-                    $10
+                    $19
                     <span className="text-lg font-normal text-muted-foreground">/month</span>
                   </div>
                   <CardDescription>For professionals and small teams</CardDescription>
@@ -406,7 +412,7 @@ export default function LandingPage() {
             {/* FAQ */}
             <div className="mx-auto max-w-3xl pt-12">
               <h3 className="text-2xl font-bold text-center mb-8">Frequently Asked Questions</h3>
-              <div className="grid gap-6 md:grid-cols-2">
+              <div className="grid gap-6 sm:grid-cols-1 md:grid-cols-2">
                 <div>
                   <h4 className="font-semibold mb-2">Can I change plans anytime?</h4>
                   <p className="text-sm text-muted-foreground">
@@ -448,21 +454,21 @@ export default function LandingPage() {
                   Join thousands of productive professionals who never miss an important task again.
                 </p>
               </div>
-              <div className="w-full max-w-sm space-y-2">
-                <form className="flex gap-2">
+              <div className="w-full max-w-sm space-y-2 px-4 sm:px-0">
+                <form className="flex flex-col sm:flex-row gap-2">
                   <Input
                     type="email"
                     placeholder="Enter your email"
                     className="max-w-lg flex-1 bg-white/10 border-white/20 text-white placeholder:text-white/70"
                   />
-                  <Button type="submit" variant="secondary">
+                  <Button type="submit" variant="secondary" className="w-full sm:w-auto">
                     Get Started
                     <ArrowRight className="ml-2 h-4 w-4" />
                   </Button>
                 </form>
                 <p className="text-xs text-purple-100">Start your free trial. No credit card required.</p>
               </div>
-              <div className="flex items-center space-x-4 pt-4">
+              <div className="flex flex-col sm:flex-row items-center space-y-2 sm:space-y-0 sm:space-x-4 pt-4">
                 <div className="flex items-center space-x-1">
                   <CheckSquare className="h-4 w-4" />
                   <span className="text-sm">Free 14-day trial</span>
