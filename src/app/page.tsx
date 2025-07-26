@@ -270,6 +270,172 @@ export default function LandingPage() {
           </div>
         </section>
 
+        {/* Pricing Section */}
+        <section id="pricing" className="w-full py-12 md:py-24 lg:py-32 bg-muted">
+          <div className="container px-4 md:px-6">
+            <div className="flex flex-col items-center justify-center space-y-4 text-center">
+              <div className="space-y-2">
+                <h2 className="text-3xl font-bold tracking-tighter sm:text-5xl">Simple, Transparent Pricing</h2>
+                <p className="max-w-[900px] text-muted-foreground md:text-xl/relaxed lg:text-base/relaxed xl:text-xl/relaxed">
+                  Choose the plan that fits your needs. Start free and upgrade as you grow.
+                </p>
+              </div>
+            </div>
+            <div className="mx-auto grid max-w-5xl items-start gap-6 py-12 lg:grid-cols-3 lg:gap-8">
+              {/* Free Plan */}
+              <Card className="relative">
+                <CardHeader>
+                  <CardTitle className="text-2xl">Free</CardTitle>
+                  <div className="text-4xl font-bold">$0</div>
+                  <CardDescription>Perfect for trying out HeardIt</CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <ul className="space-y-2 text-sm">
+                    <li className="flex items-center">
+                      <CheckSquare className="h-4 w-4 text-green-600 mr-2" />5 voice recordings per month
+                    </li>
+                    <li className="flex items-center">
+                      <CheckSquare className="h-4 w-4 text-green-600 mr-2" />
+                      Basic task extraction
+                    </li>
+                    <li className="flex items-center">
+                      <CheckSquare className="h-4 w-4 text-green-600 mr-2" />
+                      Text export
+                    </li>
+                    <li className="flex items-center">
+                      <CheckSquare className="h-4 w-4 text-green-600 mr-2" />
+                      Email support
+                    </li>
+                  </ul>
+                  <Button className="w-full bg-transparent" variant="outline">
+                    Get Started Free
+                  </Button>
+                </CardContent>
+              </Card>
+
+              {/* Pro Plan */}
+              <Card className="relative border-purple-200 shadow-lg">
+                <Badge className="absolute -top-2 left-1/2 transform -translate-x-1/2 bg-gradient-to-r from-purple-600 to-pink-600">
+                  Most Popular
+                </Badge>
+                <CardHeader>
+                  <CardTitle className="text-2xl">Pro</CardTitle>
+                  <div className="text-4xl font-bold">
+                    $10
+                    <span className="text-lg font-normal text-muted-foreground">/month</span>
+                  </div>
+                  <CardDescription>For professionals and small teams</CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <ul className="space-y-2 text-sm">
+                    <li className="flex items-center">
+                      <CheckSquare className="h-4 w-4 text-green-600 mr-2" />
+                      Unlimited voice recordings
+                    </li>
+                    <li className="flex items-center">
+                      <CheckSquare className="h-4 w-4 text-green-600 mr-2" />
+                      Advanced AI processing
+                    </li>
+                    <li className="flex items-center">
+                      <CheckSquare className="h-4 w-4 text-green-600 mr-2" />
+                      Smart categorization
+                    </li>
+                    <li className="flex items-center">
+                      <CheckSquare className="h-4 w-4 text-green-600 mr-2" />
+                      Export to Notion, Todoist
+                    </li>
+                    <li className="flex items-center">
+                      <CheckSquare className="h-4 w-4 text-green-600 mr-2" />
+                      Priority support
+                    </li>
+                    <li className="flex items-center">
+                      <CheckSquare className="h-4 w-4 text-green-600 mr-2" />
+                      Time tracking insights
+                    </li>
+                  </ul>
+                  <Button className="w-full bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700">
+                    Start Pro Trial
+                  </Button>
+                </CardContent>
+              </Card>
+
+              {/* Team Plan */}
+              <Card className="relative">
+                <CardHeader>
+                  <CardTitle className="text-2xl">Team</CardTitle>
+                  <div className="text-4xl font-bold">
+                    $49
+                    <span className="text-lg font-normal text-muted-foreground">/month</span>
+                  </div>
+                  <CardDescription>For growing teams and organizations</CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <ul className="space-y-2 text-sm">
+                    <li className="flex items-center">
+                      <CheckSquare className="h-4 w-4 text-green-600 mr-2" />
+                      Everything in Pro
+                    </li>
+                    <li className="flex items-center">
+                      <CheckSquare className="h-4 w-4 text-green-600 mr-2" />
+                      Up to 10 team members
+                    </li>
+                    <li className="flex items-center">
+                      <CheckSquare className="h-4 w-4 text-green-600 mr-2" />
+                      Shared workspaces
+                    </li>
+                    <li className="flex items-center">
+                      <CheckSquare className="h-4 w-4 text-green-600 mr-2" />
+                      Team analytics
+                    </li>
+                    <li className="flex items-center">
+                      <CheckSquare className="h-4 w-4 text-green-600 mr-2" />
+                      Admin controls
+                    </li>
+                    <li className="flex items-center">
+                      <CheckSquare className="h-4 w-4 text-green-600 mr-2" />
+                      24/7 support
+                    </li>
+                  </ul>
+                  <Button className="w-full bg-transparent" variant="outline">
+                    Start Team Trial
+                  </Button>
+                </CardContent>
+              </Card>
+            </div>
+
+            {/* FAQ */}
+            <div className="mx-auto max-w-3xl pt-12">
+              <h3 className="text-2xl font-bold text-center mb-8">Frequently Asked Questions</h3>
+              <div className="grid gap-6 md:grid-cols-2">
+                <div>
+                  <h4 className="font-semibold mb-2">Can I change plans anytime?</h4>
+                  <p className="text-sm text-muted-foreground">
+                    Yes, you can upgrade or downgrade your plan at any time. Changes take effect immediately.
+                  </p>
+                </div>
+                <div>
+                  <h4 className="font-semibold mb-2">Is there a free trial?</h4>
+                  <p className="text-sm text-muted-foreground">
+                    Yes, all paid plans come with a 14-day free trial. No credit card required to start.
+                  </p>
+                </div>
+                <div>
+                  <h4 className="font-semibold mb-2">What file formats are supported?</h4>
+                  <p className="text-sm text-muted-foreground">
+                    We support all major audio formats including MP3, WAV, M4A, and direct voice recording.
+                  </p>
+                </div>
+                <div>
+                  <h4 className="font-semibold mb-2">Is my data secure?</h4>
+                  <p className="text-sm text-muted-foreground">
+                    Absolutely. We use enterprise-grade encryption and never store your voice recordings permanently.
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
         {/* CTA Section */}
         <section className="w-full py-12 md:py-24 lg:py-32 bg-gradient-to-br from-purple-600 to-pink-600">
           <div className="container px-4 md:px-6">
