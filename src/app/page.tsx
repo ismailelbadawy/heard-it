@@ -308,10 +308,6 @@ export default function LandingPage() {
                       <CheckSquare className="h-4 w-4 text-green-600 mr-2" />
                       Text export
                     </li>
-                    <li className="flex items-center">
-                      <CheckSquare className="h-4 w-4 text-green-600 mr-2" />
-                      Email support
-                    </li>
                   </ul>
                   <Button className="w-full bg-transparent" variant="outline">
                     Get Started Free
@@ -396,10 +392,6 @@ export default function LandingPage() {
                     <li className="flex items-center">
                       <CheckSquare className="h-4 w-4 text-green-600 mr-2" />
                       Admin controls
-                    </li>
-                    <li className="flex items-center">
-                      <CheckSquare className="h-4 w-4 text-green-600 mr-2" />
-                      24/7 support
                     </li>
                   </ul>
                   <Button className="w-full bg-transparent" variant="outline">
