@@ -327,7 +327,7 @@ export default function LandingPage() {
                 <CardHeader>
                   <CardTitle className="text-2xl">Pro</CardTitle>
                   <div className="text-4xl font-bold">
-                    $19
+                    $10
                     <span className="text-lg font-normal text-muted-foreground">/month</span>
                   </div>
                   <CardDescription>For professionals and small teams</CardDescription>
