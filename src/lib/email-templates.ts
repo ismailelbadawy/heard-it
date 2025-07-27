@@ -84,7 +84,7 @@ export function renderWaitlistConfirmationEmail(email: string): string {
     <!-- Footer -->
     <div style="background-color: #f8fafc; padding: 24px 32px; text-align: center; border-top: 1px solid #e2e8f0;">
       <p style="font-size: 14px; color: #64748b; margin: 0 0 8px 0;">
-        © 2025 HeardIt. All rights reserved.
+        © ${new Date().getFullYear()} HeardIt. All rights reserved.
       </p>
       <p style="font-size: 12px; color: #94a3b8; margin: 0;">
         You're receiving this because you joined our waitlist.
