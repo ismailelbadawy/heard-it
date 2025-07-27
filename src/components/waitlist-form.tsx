@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useRef } from 'react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Mic, CheckCircle, AlertCircle, Loader2, ArrowRight } from 'lucide-react'
@@ -14,6 +14,7 @@ interface WaitlistFormProps {
 
 export function WaitlistForm({ className = '', size = 'lg', variant = 'hero' }: WaitlistFormProps) {
   const [result, setResult] = useState<{ success: boolean; message: string } | null>(null)
+  const formRef = useRef<HTMLFormElement>(null)
   const { submitWaitlist, isPending } = useWaitlist()
 
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
@@ -25,9 +26,9 @@ export function WaitlistForm({ className = '', size = 'lg', variant = 'hero' }: 
     
     setResult(result)
     
-    if (result.success) {
+    if (result.success && formRef.current) {
       // Reset form on success
-      event.currentTarget.reset()
+      formRef.current.reset()
     }
   }
 
@@ -42,7 +43,7 @@ export function WaitlistForm({ className = '', size = 'lg', variant = 'hero' }: 
 
   return (
     <div className={`w-full max-w-md space-y-2 px-4 sm:px-0 ${className}`}>
-      <form onSubmit={handleSubmit} className="flex flex-col sm:flex-row gap-2">
+      <form ref={formRef} onSubmit={handleSubmit} className="flex flex-col sm:flex-row gap-2">
         <Input 
           type="email" 
           name="email"
