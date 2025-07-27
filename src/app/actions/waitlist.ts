@@ -1,7 +1,8 @@
 'use server'
 
 import { prisma } from '@/lib/prisma'
-import { redirect } from 'next/navigation'
+import { Resend } from 'resend'
+import { renderWaitlistConfirmationEmail } from '@/lib/email-templates'
 
 export interface WaitlistFormData {
   email: string
@@ -16,6 +17,7 @@ export interface WaitlistResult {
 export async function joinWaitlist(formData: FormData): Promise<WaitlistResult> {
   try {
     const email = formData.get('email') as string
+    const resend = new Resend(process.env.RESEND_API_KEY);
 
     // Validate email
     if (!email) {
@@ -47,13 +49,32 @@ export async function joinWaitlist(formData: FormData): Promise<WaitlistResult> 
 
       console.log(`New waitlist signup saved to database: ${email}`)
 
+      // Send confirmation email
+      try {
+        const { data, error } = await resend.emails.send({
+          from: 'HeardIt <waitlist@heardit.com>',
+          to: [email],
+          subject: 'Welcome to HeardIt Waitlist! 🎉',
+          html: renderWaitlistConfirmationEmail(email),
+        });
+
+        if (error) {
+          console.error('Email sending error:', error);
+          // Don't fail the entire operation if email fails
+        } else {
+          console.log('Confirmation email sent successfully:', data);
+        }
+      } catch (emailError) {
+        console.error('Email sending failed:', emailError);
+        // Don't fail the entire operation if email fails
+      }
+
       // TODO: Add additional integrations here:
       // await addToEmailList(email) // Mailchimp, ConvertKit, etc.
-      // await sendConfirmationEmail(email)
 
       return {
         success: true,
-        message: `Thanks for joining! We'll notify you at ${email} when HeardIt launches.`
+        message: `Thanks for joining! We've sent a confirmation email to ${email}. Check your inbox for next steps! 📧`
       }
 
     } catch (dbError: any) {
