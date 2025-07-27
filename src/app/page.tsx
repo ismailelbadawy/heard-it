@@ -5,6 +5,7 @@ import { Badge } from "@/components/ui/badge"
 import { Mic, CheckSquare, Lightbulb, Clock, Zap, Users, ArrowRight, MessageSquare, Target, Brain } from "lucide-react"
 import Link from "next/link"
 import Image from "next/image"
+import { WaitlistForm } from "@/components/waitlist-form"
 
 export default function LandingPage() {
   return (
@@ -66,20 +67,7 @@ export default function LandingPage() {
                   Never lose track of important ideas again.
                 </p>
               </div>
-              <div className="w-full max-w-md space-y-2 px-4 sm:px-0">
-                <form className="flex flex-col sm:flex-row gap-2">
-                  <Input type="email" placeholder="Enter your email" className="flex-1" required />
-                  <Button
-                    type="submit"
-                    size="lg"
-                    className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 w-full sm:w-auto"
-                  >
-                    <Mic className="mr-2 h-4 w-4" />
-                    Join Waitlist
-                  </Button>
-                </form>
-                <p className="text-xs text-muted-foreground text-center">Be the first to know when HeardIt launches</p>
-              </div>
+              <WaitlistForm variant="hero" />
               <div className="pt-8">
                 <Image
                   src="/placeholder.svg?height=400&width=600"
@@ -447,18 +435,7 @@ export default function LandingPage() {
                 </p>
               </div>
               <div className="w-full max-w-sm space-y-2 px-4 sm:px-0">
-                <form className="flex flex-col sm:flex-row gap-2">
-                  <Input
-                    type="email"
-                    placeholder="Enter your email"
-                    className="max-w-lg flex-1 bg-white/10 border-white/20 text-white placeholder:text-white/70"
-                  />
-                  <Button type="submit" variant="secondary" className="w-full sm:w-auto">
-                    Get Started
-                    <ArrowRight className="ml-2 h-4 w-4" />
-                  </Button>
-                </form>
-                <p className="text-xs text-purple-100">Start your free trial. No credit card required.</p>
+                <WaitlistForm variant="cta" />
               </div>
               <div className="flex flex-col sm:flex-row items-center space-y-2 sm:space-y-0 sm:space-x-4 pt-4">
                 <div className="flex items-center space-x-1">
