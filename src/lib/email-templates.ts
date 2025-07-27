@@ -66,7 +66,7 @@ export function renderWaitlistConfirmationEmail(email: string): string {
 
       <!-- CTA Button -->
       <div style="text-align: center; margin-bottom: 32px;">
-        <a href="https://heardit.com" style="display: inline-block; background: linear-gradient(135deg, #9333ea 0%, #ec4899 100%); color: white; padding: 12px 24px; border-radius: 8px; text-decoration: none; font-weight: 600; font-size: 16px;">
+        <a href="${process.env.HEARDIT_BASE_URL || 'https://heardit.com'}" style="display: inline-block; background: linear-gradient(135deg, #9333ea 0%, #ec4899 100%); color: white; padding: 12px 24px; border-radius: 8px; text-decoration: none; font-weight: 600; font-size: 16px;">
           Visit HeardIt
         </a>
       </div>
