@@ -140,7 +140,7 @@ export const WaitlistConfirmationEmail: React.FC<WaitlistEmailProps> = ({ email 
 
           {/* CTA Button */}
           <div style={{ textAlign: 'center', marginBottom: '32px' }}>
-            <a href="https://heardit-landing.com" style={{
+            <a href="https://heardit.com" style={{
               display: 'inline-block',
               background: 'linear-gradient(135deg, #9333ea 0%, #ec4899 100%)',
               color: 'white',
