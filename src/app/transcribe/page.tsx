@@ -582,6 +582,7 @@ export default function TranscribePage() {
                   {/* Tasks Section */}
                   {processedResult.tasks && processedResult.tasks.length > 0 && (
                     <div className="mb-6">
+                        
                       <h4 className="text-md font-medium text-green-900 mb-2">Tasks & Action Items</h4>
                       <div className="bg-white border border-green-200 rounded-md p-4">
                         <div className="space-y-3">
