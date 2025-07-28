@@ -71,11 +71,11 @@ export default function LandingPage() {
               <div className="flex flex-col sm:flex-row gap-4 items-center justify-center mt-4">
                 <Link href="/transcribe">
                   <Button size="lg" className="min-w-48">
-                    Try Transcription Now
+                    Try AI Analysis Now
                   </Button>
                 </Link>
                 <p className="text-sm text-muted-foreground">
-                  No account required • Upload or record audio
+                  No account required • Get summaries, key points & task lists
                 </p>
               </div>
               <div className="pt-8">

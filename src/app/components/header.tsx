@@ -22,7 +22,7 @@ export default function Header() {
                         <Link href="/" className="text-gray-700 hover:text-black font-medium transition-colors duration-150 pb-1 border-b-2 border-transparent hover:border-black">Home</Link>
                     </li>
                     <li>
-                        <Link href="/transcribe" className="text-gray-700 hover:text-black font-medium transition-colors duration-150 pb-1 border-b-2 border-transparent hover:border-black">Transcribe</Link>
+                        <Link href="/transcribe" className="text-gray-700 hover:text-black font-medium transition-colors duration-150 pb-1 border-b-2 border-transparent hover:border-black">Analyze</Link>
                     </li>
                     <li>
                         <a href="#how" className="text-gray-700 hover:text-black font-medium transition-colors duration-150 pb-1 border-b-2 border-transparent hover:border-black">How It Works?</a>
