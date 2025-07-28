@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
-import { transcribeAudio, TranscriptionResult } from "@/app/actions/transcribe";
+import { processAudio, ProcessedAudioResult, Task, KeyPoint } from "@/app/actions/transcribe";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -36,7 +36,7 @@ export default function TranscribePage() {
 
   // Transcription state
   const [isTranscribing, setIsTranscribing] = useState(false);
-  const [transcriptionResult, setTranscriptionResult] = useState<TranscriptionResult | null>(null);
+  const [processedResult, setProcessedResult] = useState<ProcessedAudioResult | null>(null);
   
   // Active tab state
   const [activeTab, setActiveTab] = useState<"upload" | "record">("upload");
@@ -63,7 +63,7 @@ export default function TranscribePage() {
     const file = event.target.files?.[0];
     if (file) {
       setSelectedFile(file);
-      setTranscriptionResult(null);
+      setProcessedResult(null);
       // Clear recording if switching to upload
       if (recorder.audioBlob) {
         setRecorder(prev => ({
@@ -118,7 +118,7 @@ export default function TranscribePage() {
 
       // Clear selected file if switching to recording
       setSelectedFile(null);
-      setTranscriptionResult(null);
+      setProcessedResult(null);
 
       // Start timer
       timerRef.current = setInterval(() => {
@@ -206,19 +206,19 @@ export default function TranscribePage() {
     if (!audioFile) return;
 
     setIsTranscribing(true);
-    setTranscriptionResult(null);
+    setProcessedResult(null);
 
     try {
       const formData = new FormData();
       formData.append("audio", audioFile);
 
-      const result = await transcribeAudio(formData);
-      setTranscriptionResult(result);
+      const result = await processAudio(formData);
+      setProcessedResult(result);
     } catch (error) {
-      console.error("Transcription error:", error);
-      setTranscriptionResult({
+      console.error("Processing error:", error);
+      setProcessedResult({
         success: false,
-        error: "An unexpected error occurred during transcription"
+        error: "An unexpected error occurred during processing"
       });
     } finally {
       setIsTranscribing(false);
@@ -250,10 +250,10 @@ export default function TranscribePage() {
         <div className="max-w-4xl mx-auto px-4">
         <div className="text-center mb-8">
           <h1 className="text-3xl font-bold text-gray-900 mb-2">
-            Audio Transcription
+            AI Audio Analysis
           </h1>
           <p className="text-gray-600">
-            Upload an audio file or record directly to get an AI-powered transcription
+            Upload an audio file or record directly to get AI-powered summaries, key points, and actionable task lists
           </p>
         </div>
 
@@ -488,39 +488,296 @@ export default function TranscribePage() {
                       d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
                     ></path>
                   </svg>
-                  Transcribing...
+                  Analyzing Audio...
                 </>
               ) : (
-                "Transcribe Audio"
+                "Process Audio"
               )}
             </Button>
           </div>
 
           {/* Results */}
-          {transcriptionResult && (
+          {processedResult && (
             <div className="mt-8">
-              {transcriptionResult.success ? (
+              {processedResult.success ? (
                 <div className="bg-green-50 border border-green-200 rounded-lg p-6">
                   <div className="flex items-center justify-between mb-4">
                     <h3 className="text-lg font-semibold text-green-800">
-                      Transcription Result
+                      Audio Processing Complete
                     </h3>
                     <Badge className="bg-green-100 text-green-800">
                       Success
                     </Badge>
                   </div>
-                  <div className="bg-white border border-green-200 rounded-md p-4">
-                    <p className="text-gray-800 whitespace-pre-wrap leading-relaxed">
-                      {transcriptionResult.text}
-                    </p>
+
+                  {/* Summary Section */}
+                  <div className="mb-6">
+                    <h4 className="text-md font-medium text-green-900 mb-2">Summary</h4>
+                    <div className="bg-white border border-green-200 rounded-md p-4">
+                      <p className="text-gray-800 leading-relaxed">
+                        {processedResult.summary}
+                      </p>
+                    </div>
                   </div>
-                  <div className="mt-4 flex space-x-2">
+
+                  {/* Tags Section */}
+                  {processedResult.tags && processedResult.tags.length > 0 && (
+                    <div className="mb-6">
+                      <h4 className="text-md font-medium text-green-900 mb-2">Tags</h4>
+                      <div className="flex flex-wrap gap-2">
+                        {processedResult.tags.map((tag, index) => (
+                          <Badge
+                            key={index}
+                            variant="secondary"
+                            className="bg-blue-100 text-blue-800"
+                          >
+                            {tag}
+                          </Badge>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Key Points Section */}
+                  {processedResult.keyPoints && processedResult.keyPoints.length > 0 && (
+                    <div className="mb-6">
+                      <h4 className="text-md font-medium text-green-900 mb-2">Key Points</h4>
+                      <div className="bg-white border border-green-200 rounded-md p-4">
+                        <div className="space-y-3">
+                          {processedResult.keyPoints.map((keyPoint, index) => (
+                            <div key={index} className="flex items-start space-x-3">
+                              <div className="flex-shrink-0 mt-1">
+                                <div className={`w-2 h-2 rounded-full ${
+                                  keyPoint.importance === 'high' ? 'bg-red-500' :
+                                  keyPoint.importance === 'medium' ? 'bg-yellow-500' : 'bg-green-500'
+                                }`}></div>
+                              </div>
+                              <div className="flex-1">
+                                <p className="text-gray-800 text-sm">{keyPoint.point}</p>
+                                <div className="flex items-center mt-1 space-x-2">
+                                  <Badge 
+                                    variant="outline" 
+                                    className={`text-xs ${
+                                      keyPoint.importance === 'high' ? 'border-red-200 text-red-700' :
+                                      keyPoint.importance === 'medium' ? 'border-yellow-200 text-yellow-700' :
+                                      'border-green-200 text-green-700'
+                                    }`}
+                                  >
+                                    {keyPoint.importance}
+                                  </Badge>
+                                  {keyPoint.category && (
+                                    <Badge variant="outline" className="text-xs border-gray-200 text-gray-600">
+                                      {keyPoint.category}
+                                    </Badge>
+                                  )}
+                                </div>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Tasks Section */}
+                  {processedResult.tasks && processedResult.tasks.length > 0 && (
+                    <div className="mb-6">
+                      <h4 className="text-md font-medium text-green-900 mb-2">Tasks & Action Items</h4>
+                      <div className="bg-white border border-green-200 rounded-md p-4">
+                        <div className="space-y-3">
+                          {processedResult.tasks.map((task, index) => (
+                            <div key={index} className="flex items-start space-x-3 p-3 bg-gray-50 rounded-md">
+                              <div className="flex-shrink-0 mt-1">
+                                <input
+                                  type="checkbox" 
+                                  checked={task.completed}
+                                  onChange={(e) => {
+                                    // Update task completion status
+                                    const updatedTasks = [...(processedResult.tasks || [])];
+                                    updatedTasks[index] = { ...task, completed: e.target.checked };
+                                    setProcessedResult(prev => prev ? {
+                                      ...prev,
+                                      tasks: updatedTasks
+                                    } : null);
+                                  }}
+                                  className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500"
+                                  aria-label={`Mark task "${task.title}" as ${task.completed ? 'incomplete' : 'complete'}`}
+                                />
+                              </div>
+                              <div className="flex-1">
+                                <h5 className={`font-medium text-sm ${task.completed ? 'line-through text-gray-500' : 'text-gray-800'}`}>
+                                  {task.title}
+                                </h5>
+                                {task.description && (
+                                  <p className={`text-xs mt-1 ${task.completed ? 'line-through text-gray-400' : 'text-gray-600'}`}>
+                                    {task.description}
+                                  </p>
+                                )}
+                                <div className="flex items-center mt-2 space-x-2">
+                                  <Badge 
+                                    variant="outline" 
+                                    className={`text-xs ${
+                                      task.priority === 'high' ? 'border-red-200 text-red-700 bg-red-50' :
+                                      task.priority === 'medium' ? 'border-yellow-200 text-yellow-700 bg-yellow-50' :
+                                      'border-green-200 text-green-700 bg-green-50'
+                                    }`}
+                                  >
+                                    {task.priority} priority
+                                  </Badge>
+                                  <Badge variant="outline" className="text-xs border-blue-200 text-blue-700 bg-blue-50">
+                                    {task.category}
+                                  </Badge>
+                                  {task.deadline && (
+                                    <Badge variant="outline" className="text-xs border-purple-200 text-purple-700 bg-purple-50">
+                                      Due: {new Date(task.deadline).toLocaleDateString()}
+                                    </Badge>
+                                  )}
+                                </div>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                        {/* Tasks Summary */}
+                        <div className="mt-4 pt-3 border-t border-gray-200">
+                          <div className="flex items-center justify-between text-sm text-gray-600">
+                            <span>
+                              {processedResult.tasks.filter(t => t.completed).length} of {processedResult.tasks.length} completed
+                            </span>
+                            <div className="flex space-x-2">
+                              <Button
+                                onClick={() => {
+                                  const taskText = processedResult.tasks?.map(task => 
+                                    `${task.completed ? '✅' : '☐'} ${task.title}${task.description ? ` - ${task.description}` : ''} (${task.priority} priority)`
+                                  ).join('\n');
+                                  navigator.clipboard.writeText(taskText || '');
+                                }}
+                                variant="outline"
+                                size="sm"
+                                className="text-xs"
+                              >
+                                Copy Tasks
+                              </Button>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Metadata Section */}
+                  {processedResult.metadata && (
+                    <div className="mb-6">
+                      <h4 className="text-md font-medium text-green-900 mb-2">File Information</h4>
+                      <div className="bg-white border border-green-200 rounded-md p-4">
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
+                          <div>
+                            <span className="font-medium text-gray-700">File:</span>
+                            <span className="ml-2 text-gray-600">{processedResult.metadata.fileName}</span>
+                          </div>
+                          <div>
+                            <span className="font-medium text-gray-700">Size:</span>
+                            <span className="ml-2 text-gray-600">{formatFileSize(processedResult.metadata.fileSize)}</span>
+                          </div>
+                          <div>
+                            <span className="font-medium text-gray-700">Processed:</span>
+                            <span className="ml-2 text-gray-600">{new Date(processedResult.metadata.processedAt).toLocaleTimeString()}</span>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Action Buttons */}
+                  <div className="flex flex-wrap gap-2">
                     <Button
-                      onClick={() => navigator.clipboard.writeText(transcriptionResult.text || "")}
+                      onClick={() => navigator.clipboard.writeText(processedResult.summary || "")}
                       variant="outline"
                       size="sm"
                     >
-                      Copy Text
+                      Copy Summary
+                    </Button>
+                    
+                    {processedResult.keyPoints && processedResult.keyPoints.length > 0 && (
+                      <Button
+                        onClick={() => {
+                          const keyPointsText = processedResult.keyPoints?.map(kp => 
+                            `• ${kp.point} (${kp.importance}${kp.category ? `, ${kp.category}` : ''})`
+                          ).join('\n');
+                          navigator.clipboard.writeText(keyPointsText || '');
+                        }}
+                        variant="outline"
+                        size="sm"
+                      >
+                        Copy Key Points
+                      </Button>
+                    )}
+
+                    {processedResult.tasks && processedResult.tasks.length > 0 && (
+                      <Button
+                        onClick={() => {
+                          const tasksText = processedResult.tasks?.map(task => 
+                            `${task.completed ? '✅' : '☐'} ${task.title}${task.description ? ` - ${task.description}` : ''} (${task.priority} priority${task.deadline ? `, due: ${task.deadline}` : ''})`
+                          ).join('\n');
+                          navigator.clipboard.writeText(tasksText || '');
+                        }}
+                        variant="outline"
+                        size="sm"
+                      >
+                        Copy Tasks
+                      </Button>
+                    )}
+                    {processedResult.rawTranscript && (
+                      <Button
+                        onClick={() => {
+                          const modal = document.createElement('div');
+                          modal.className = 'fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4';
+                          modal.innerHTML = `
+                            <div class="bg-white rounded-lg max-w-4xl max-h-96 overflow-auto p-6">
+                              <div class="flex justify-between items-center mb-4">
+                                <h3 class="text-lg font-semibold">Raw Transcript</h3>
+                                <button onclick="this.closest('.fixed').remove()" class="text-gray-500 hover:text-gray-700">
+                                  <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                                  </svg>
+                                </button>
+                              </div>
+                              <div class="bg-gray-50 rounded p-4 text-sm">
+                                <pre class="whitespace-pre-wrap">${processedResult.rawTranscript}</pre>
+                              </div>
+                              <div class="mt-4 flex gap-2">
+                                <button onclick="navigator.clipboard.writeText('${processedResult.rawTranscript?.replace(/'/g, "\\'")}'); this.textContent='Copied!'; setTimeout(() => this.textContent='Copy Raw Transcript', 2000)" class="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600">
+                                  Copy Raw Transcript
+                                </button>
+                                <button onclick="this.closest('.fixed').remove()" class="px-4 py-2 bg-gray-300 text-gray-700 rounded hover:bg-gray-400">
+                                  Close
+                                </button>
+                              </div>
+                            </div>
+                          `;
+                          document.body.appendChild(modal);
+                        }}
+                        variant="outline"
+                        size="sm"
+                      >
+                        View Raw Transcript
+                      </Button>
+                    )}
+                    <Button
+                      onClick={() => {
+                        const exportData = {
+                          summary: processedResult.summary,
+                          tags: processedResult.tags,
+                          keyPoints: processedResult.keyPoints,
+                          tasks: processedResult.tasks,
+                          metadata: processedResult.metadata,
+                          rawTranscript: processedResult.rawTranscript
+                        };
+                        navigator.clipboard.writeText(JSON.stringify(exportData, null, 2));
+                      }}
+                      variant="outline"
+                      size="sm"
+                    >
+                      Export JSON
                     </Button>
                   </div>
                 </div>
@@ -528,13 +785,13 @@ export default function TranscribePage() {
                 <div className="bg-red-50 border border-red-200 rounded-lg p-6">
                   <div className="flex items-center justify-between mb-4">
                     <h3 className="text-lg font-semibold text-red-800">
-                      Transcription Error
+                      Processing Error
                     </h3>
                     <Badge variant="destructive">
                       Error
                     </Badge>
                   </div>
-                  <p className="text-red-700">{transcriptionResult.error}</p>
+                  <p className="text-red-700">{processedResult.error}</p>
                 </div>
               )}
             </div>
