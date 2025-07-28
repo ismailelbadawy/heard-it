@@ -190,7 +190,15 @@ export default function TranscribePage() {
       audioFile = selectedFile;
     } else if (activeTab === "record" && recorder.audioBlob) {
       // Convert blob to file
-      audioFile = new File([recorder.audioBlob], `recording_${Date.now()}.webm`, {
+      const mimeToExtension: { [key: string]: string } = {
+        "audio/webm": "webm",
+        "video/webm": "webm",
+        "audio/mpeg": "mp3",
+        "audio/wav": "wav",
+        "audio/ogg": "ogg",
+      };
+      const extension = mimeToExtension[recorder.audioBlob.type] || "bin";
+      audioFile = new File([recorder.audioBlob], `recording_${Date.now()}.${extension}`, {
         type: recorder.audioBlob.type,
       });
     }
