@@ -68,6 +68,16 @@ export default function LandingPage() {
                 </p>
               </div>
               <WaitlistForm variant="hero" />
+              <div className="flex flex-col sm:flex-row gap-4 items-center justify-center mt-4">
+                <Link href="/transcribe">
+                  <Button size="lg" className="min-w-48">
+                    Try Transcription Now
+                  </Button>
+                </Link>
+                <p className="text-sm text-muted-foreground">
+                  No account required • Upload or record audio
+                </p>
+              </div>
               <div className="pt-8">
                 <Image
                   src="/placeholder.svg?height=400&width=600"
