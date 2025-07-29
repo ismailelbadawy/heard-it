@@ -16,6 +16,7 @@ const SUPPORTED_AUDIO_TYPES = [
   "audio/m4a",
   "audio/ogg",
   "audio/flac",
+  "audio/x-m4a"
 ];
 
 const MAX_FILE_SIZE = 25 * 1024 * 1024; // 25MB (OpenAI Whisper limit)
