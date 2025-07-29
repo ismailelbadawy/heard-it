@@ -75,12 +75,56 @@ export default function TranscribePage() {
     }
   };
 
+  // Check MediaRecorder support and get best MIME type for current browser
+  const getSupportedMimeType = () => {
+    const types = [
+      'audio/webm;codecs=opus',
+      'audio/webm',
+      'audio/mp4',
+      'audio/ogg;codecs=opus',
+      'audio/wav'
+    ];
+    
+    for (const type of types) {
+      if (MediaRecorder.isTypeSupported(type)) {
+        return type;
+      }
+    }
+    
+    // Fallback for older browsers
+    return 'audio/webm';
+  };
+
+  // Check if MediaRecorder is supported
+  const isMediaRecorderSupported = () => {
+    return typeof MediaRecorder !== 'undefined' && MediaRecorder.isTypeSupported;
+  };
+
   // Recording handlers
   const startRecording = async () => {
     try {
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      // Check browser support first
+      if (!isMediaRecorderSupported()) {
+        alert("Audio recording is not supported in this browser. Please try using Chrome, Firefox, or Safari on desktop.");
+        return;
+      }
+
+      // Request microphone access
+      const stream = await navigator.mediaDevices.getUserMedia({ 
+        audio: {
+          echoCancellation: true,
+          noiseSuppression: true,
+          autoGainControl: true,
+        }
+      });
+
+      // Get the best supported MIME type
+      const mimeType = getSupportedMimeType();
+      
+      // Create MediaRecorder with proper options
       const mediaRecorder = new MediaRecorder(stream, {
-        mimeType: MediaRecorder.isTypeSupported('audio/webm') ? 'audio/webm' : 'audio/mp4'
+        mimeType: mimeType,
+        audioBitsPerSecond: 128000, // 128 kbps for good quality
       });
       
       mediaRecorderRef.current = mediaRecorder;
@@ -93,7 +137,8 @@ export default function TranscribePage() {
       };
 
       mediaRecorder.onstop = () => {
-        const audioBlob = new Blob(chunksRef.current, { type: mediaRecorder.mimeType });
+        // Create blob with proper MIME type
+        const audioBlob = new Blob(chunksRef.current, { type: mimeType });
         const audioUrl = URL.createObjectURL(audioBlob);
         
         setRecorder(prev => ({
@@ -108,7 +153,20 @@ export default function TranscribePage() {
         stream.getTracks().forEach(track => track.stop());
       };
 
-      mediaRecorder.start(1000); // Collect data every second
+      mediaRecorder.onerror = (event) => {
+        console.error("MediaRecorder error:", event);
+        alert("Recording error occurred. Please try again.");
+        // Stop all tracks and reset state
+        stream.getTracks().forEach(track => track.stop());
+        setRecorder(prev => ({
+          ...prev,
+          isRecording: false,
+          isPaused: false,
+        }));
+      };
+
+      // Start recording with small time slices for better compatibility
+      mediaRecorder.start(100); // Collect data every 100ms for better Safari compatibility
       
       setRecorder(prev => ({
         ...prev,
@@ -130,41 +188,84 @@ export default function TranscribePage() {
 
     } catch (error) {
       console.error("Error starting recording:", error);
-      alert("Could not access microphone. Please check permissions.");
+      let errorMessage = "Could not access microphone.";
+      
+      if (error instanceof Error) {
+        if (error.name === 'NotAllowedError') {
+          errorMessage = "Microphone access denied. Please allow microphone permissions and try again.";
+        } else if (error.name === 'NotFoundError') {
+          errorMessage = "No microphone found. Please check your device has a microphone.";
+        } else if (error.name === 'NotSupportedError') {
+          errorMessage = "Audio recording is not supported in this browser.";
+        } else if (error.name === 'AbortError') {
+          errorMessage = "Recording was aborted. Please try again.";
+        }
+      }
+      
+      alert(errorMessage);
     }
   };
 
   const pauseRecording = () => {
-    if (mediaRecorderRef.current && recorder.isRecording) {
-      mediaRecorderRef.current.pause();
-      setRecorder(prev => ({ ...prev, isPaused: true }));
-      if (timerRef.current) {
-        clearInterval(timerRef.current);
+    if (mediaRecorderRef.current && recorder.isRecording && !recorder.isPaused) {
+      // Check if pause is supported (not supported in all Safari versions)
+      if (typeof mediaRecorderRef.current.pause === 'function') {
+        try {
+          mediaRecorderRef.current.pause();
+          setRecorder(prev => ({ ...prev, isPaused: true }));
+          if (timerRef.current) {
+            clearInterval(timerRef.current);
+          }
+        } catch (error) {
+          console.error("Error pausing recording:", error);
+          // If pause fails, just continue recording
+          alert("Pause is not supported in this browser. Recording will continue.");
+        }
+      } else {
+        alert("Pause is not supported in this browser. Please stop the recording when finished.");
       }
     }
   };
 
   const resumeRecording = () => {
     if (mediaRecorderRef.current && recorder.isPaused) {
-      mediaRecorderRef.current.resume();
-      setRecorder(prev => ({ ...prev, isPaused: false }));
-      
-      // Resume timer
-      timerRef.current = setInterval(() => {
-        setRecorder(prev => ({
-          ...prev,
-          recordingTime: prev.recordingTime + 1,
-        }));
-      }, 1000);
+      // Check if resume is supported
+      if (typeof mediaRecorderRef.current.resume === 'function') {
+        try {
+          mediaRecorderRef.current.resume();
+          setRecorder(prev => ({ ...prev, isPaused: false }));
+          
+          // Resume timer
+          timerRef.current = setInterval(() => {
+            setRecorder(prev => ({
+              ...prev,
+              recordingTime: prev.recordingTime + 1,
+            }));
+          }, 1000);
+        } catch (error) {
+          console.error("Error resuming recording:", error);
+          alert("Error resuming recording. Please try starting a new recording.");
+        }
+      }
     }
   };
 
   const stopRecording = () => {
     if (mediaRecorderRef.current) {
-      mediaRecorderRef.current.stop();
-      if (timerRef.current) {
-        clearInterval(timerRef.current);
-        timerRef.current = null;
+      try {
+        mediaRecorderRef.current.stop();
+        if (timerRef.current) {
+          clearInterval(timerRef.current);
+          timerRef.current = null;
+        }
+      } catch (error) {
+        console.error("Error stopping recording:", error);
+        // Force reset state if stop fails
+        setRecorder(prev => ({
+          ...prev,
+          isRecording: false,
+          isPaused: false,
+        }));
       }
     }
   };
@@ -189,21 +290,51 @@ export default function TranscribePage() {
     if (activeTab === "upload" && selectedFile) {
       audioFile = selectedFile;
     } else if (activeTab === "record" && recorder.audioBlob) {
-      // Convert blob to file
-      const mimeToExtension: { [key: string]: string } = {
-        "audio/webm": "webm",
-        "video/webm": "webm",
-        "audio/mpeg": "mp3",
-        "audio/wav": "wav",
-        "audio/ogg": "ogg",
+      // Convert blob to file with proper extension and MIME type
+      const getFileExtension = (mimeType: string): string => {
+        const mimeToExtension: { [key: string]: string } = {
+          "audio/webm": "webm",
+          "audio/webm;codecs=opus": "webm",
+          "video/webm": "webm", // Sometimes webm is detected as video
+          "audio/mp4": "m4a",
+          "audio/mpeg": "mp3",
+          "audio/wav": "wav",
+          "audio/ogg": "ogg",
+          "audio/ogg;codecs=opus": "ogg",
+          "audio/x-m4a": "m4a",
+          "audio/m4a": "m4a",
+          "audio/flac": "flac",
+        };
+        
+        // Try exact match first
+        if (mimeToExtension[mimeType]) {
+          return mimeToExtension[mimeType];
+        }
+        
+        // Try partial matches
+        for (const [mime, ext] of Object.entries(mimeToExtension)) {
+          if (mimeType.includes(mime.split(';')[0])) {
+            return ext;
+          }
+        }
+        
+        // Default fallback
+        return "webm";
       };
-      const extension = mimeToExtension[recorder.audioBlob.type] || "bin";
-      audioFile = new File([recorder.audioBlob], `recording_${Date.now()}.${extension}`, {
+
+      const extension = getFileExtension(recorder.audioBlob.type);
+      const fileName = `recording_${new Date().toISOString().replace(/[:.]/g, '-')}.${extension}`;
+      
+      audioFile = new File([recorder.audioBlob], fileName, {
         type: recorder.audioBlob.type,
+        lastModified: Date.now(),
       });
     }
 
-    if (!audioFile) return;
+    if (!audioFile) {
+      alert("Please select a file or complete a recording first.");
+      return;
+    }
 
     setIsTranscribing(true);
     setProcessedResult(null);
@@ -218,7 +349,7 @@ export default function TranscribePage() {
       console.error("Processing error:", error);
       setProcessedResult({
         success: false,
-        error: "An unexpected error occurred during processing"
+        error: "An unexpected error occurred during processing. Please try again."
       });
     } finally {
       setIsTranscribing(false);
@@ -430,6 +561,45 @@ export default function TranscribePage() {
                 </div>
               </div>
 
+              {/* Browser compatibility info */}
+              {!isMediaRecorderSupported() && (
+                <div className="bg-amber-50 border border-amber-200 rounded-lg p-4">
+                  <div className="flex items-start">
+                    <svg className="w-5 h-5 text-amber-500 mt-0.5 mr-3 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                      <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                    </svg>
+                    <div>
+                      <h4 className="font-medium text-amber-800 mb-1">Recording Not Supported</h4>
+                      <p className="text-sm text-amber-700">
+                        Audio recording is not supported in this browser. Please try using Chrome, Firefox, or Safari on desktop, or use the file upload option instead.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Recording quality info */}
+              {isMediaRecorderSupported() && (
+                <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                  <div className="flex items-start">
+                    <svg className="w-5 h-5 text-blue-500 mt-0.5 mr-3 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                      <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
+                    </svg>
+                    <div>
+                      <h4 className="font-medium text-blue-800 mb-1">Recording Tips</h4>
+                      <ul className="text-sm text-blue-700 space-y-1">
+                        <li>• Speak clearly and close to your microphone</li>
+                        <li>• Record in a quiet environment for best results</li>
+                        <li>• Allow microphone permissions when prompted</li>
+                        {navigator.userAgent.includes('Safari') && !navigator.userAgent.includes('Chrome') && (
+                          <li>• On Safari iOS, pause/resume may not be available</li>
+                        )}
+                      </ul>
+                    </div>
+                  </div>
+                </div>
+              )}
+
               {recorder.audioBlob && recorder.audioUrl && (
                 <div className="bg-green-50 border border-green-200 rounded-lg p-4">
                   <div className="flex items-center justify-between mb-4">
@@ -582,7 +752,7 @@ export default function TranscribePage() {
                   {/* Tasks Section */}
                   {processedResult.tasks && processedResult.tasks.length > 0 && (
                     <div className="mb-6">
-                        
+
                       <h4 className="text-md font-medium text-green-900 mb-2">Tasks & Action Items</h4>
                       <div className="bg-white border border-green-200 rounded-md p-4">
                         <div className="space-y-3">

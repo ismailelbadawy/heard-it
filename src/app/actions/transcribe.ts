@@ -16,7 +16,14 @@ const SUPPORTED_AUDIO_TYPES = [
   "audio/m4a",
   "audio/ogg",
   "audio/flac",
-  "audio/x-m4a"
+  "audio/x-m4a",
+  "audio/aac",
+  "audio/mp3",
+  "video/webm", // Sometimes webm audio is detected as video
+  "audio/webm;codecs=opus",
+  "audio/ogg;codecs=opus",
+  "audio/x-wav",
+  "audio/wave"
 ];
 
 const MAX_FILE_SIZE = 25 * 1024 * 1024; // 25MB (OpenAI Whisper limit)
@@ -170,11 +177,37 @@ export async function processAudio(formData: FormData): Promise<ProcessedAudioRe
       };
     }
 
-    // Validate file type
-    if (!SUPPORTED_AUDIO_TYPES.includes(file.type)) {
+    // Validate file type with more flexible checking
+    const isValidAudioType = (fileType: string, fileName: string): boolean => {
+      // Direct MIME type match
+      if (SUPPORTED_AUDIO_TYPES.includes(fileType)) {
+        return true;
+      }
+      
+      // Check if it's an audio type that might be missing from our list
+      if (fileType.startsWith('audio/')) {
+        return true;
+      }
+      
+      // Check by file extension if MIME type is unknown or generic
+      if (!fileType || fileType === 'application/octet-stream' || fileType === 'binary/octet-stream') {
+        const ext = fileName.toLowerCase().split('.').pop();
+        const audioExtensions = ['mp3', 'wav', 'm4a', 'aac', 'ogg', 'flac', 'webm', 'mp4'];
+        return audioExtensions.includes(ext || '');
+      }
+      
+      // Special case for webm videos that are actually audio
+      if (fileType === 'video/webm') {
+        return true;
+      }
+      
+      return false;
+    };
+
+    if (!isValidAudioType(file.type, file.name)) {
       return {
         success: false,
-        error: `Unsupported file type: ${file.type}. Supported types: ${SUPPORTED_AUDIO_TYPES.join(", ")}`
+        error: `Unsupported file type: ${file.type || 'unknown'}. Please upload an audio file (MP3, WAV, M4A, etc.)`
       };
     }
 
