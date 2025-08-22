@@ -6,48 +6,17 @@ import { Mic, CheckSquare, Lightbulb, Clock, Zap, Users, ArrowRight, MessageSqua
 import Link from "next/link"
 import Image from "next/image"
 import { WaitlistForm } from "@/components/waitlist-form"
+import Header from "@/app/components/header"
 
 export default function LandingPage() {
   return (
     <div className="flex flex-col min-h-screen">
       {/* Header */}
-      <header className="px-4 lg:px-6 h-16 flex items-center border-b">
-        <Link href="/" className="flex items-center justify-center">
-          <div className="flex items-center space-x-2">
-            <div className="w-8 h-8 bg-gradient-to-br from-purple-600 to-pink-600 rounded-lg flex items-center justify-center">
-              <Mic className="h-4 w-4 text-white" />
-            </div>
-            <span className="font-bold text-xl">HeardIt</span>
-          </div>
-        </Link>
-        <nav className="ml-auto hidden md:flex gap-4 sm:gap-6">
-          <Link href="#features" className="text-sm font-medium hover:underline underline-offset-4">
-            Features
-          </Link>
-          <Link href="#how-it-works" className="text-sm font-medium hover:underline underline-offset-4">
-            How it Works
-          </Link>
-          <Link href="#pricing" className="text-sm font-medium hover:underline underline-offset-4">
-            Pricing
-          </Link>
-        </nav>
-        <div className="ml-4 hidden sm:flex gap-2">
-          <Button variant="ghost" size="sm">
-            Sign In
-          </Button>
-          <Button size="sm">Get Started</Button>
-        </div>
-        {/* Mobile menu button */}
-        <Button variant="ghost" size="sm" className="ml-auto md:hidden">
-          <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
-          </svg>
-        </Button>
-      </header>
+      <Header />
 
       <main className="flex-1">
         {/* Hero Section */}
-        <section className="w-full py-12 md:py-24 lg:py-32 xl:py-48 bg-gradient-to-br from-purple-50 to-pink-50">
+        <section id="hero" className="w-full py-12 md:py-24 lg:py-32 xl:py-48 bg-gradient-to-br from-purple-50 to-pink-50">
           <div className="container px-4 md:px-6">
             <div className="flex flex-col items-center space-y-4 text-center">
               <Badge variant="secondary" className="mb-4">

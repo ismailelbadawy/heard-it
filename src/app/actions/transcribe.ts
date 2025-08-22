@@ -34,6 +34,20 @@ export interface KeyPoint {
   category?: string;
 }
 
+export interface SentimentAnalysis {
+  overall: "positive" | "negative" | "neutral";
+  confidence: number; // 0-1 scale
+  emotions?: {
+    joy?: number;
+    sadness?: number;
+    anger?: number;
+    fear?: number;
+    surprise?: number;
+    disgust?: number;
+  };
+  tone?: "professional" | "casual" | "formal" | "conversational" | "urgent" | "calm";
+}
+
 export interface Task {
   title: string;
   description?: string;
@@ -49,6 +63,7 @@ export interface ProcessedAudioResult {
   tags?: string[];
   keyPoints?: KeyPoint[];
   tasks?: Task[];
+  sentiment?: SentimentAnalysis;
   rawTranscript?: string; // Keep for future use
   metadata?: {
     duration?: number;
@@ -66,12 +81,13 @@ export interface TranscriptionResult {
   error?: string;
 }
 
-// Helper function to process raw transcript into summary, tags, key points, and tasks
+// Helper function to process raw transcript into summary, tags, key points, tasks, and sentiment
 async function processTranscript(transcript: string): Promise<{
   summary: string;
   tags: string[];
   keyPoints: KeyPoint[];
   tasks: Task[];
+  sentiment: SentimentAnalysis;
 }> {
   const prompt = `Analyze the following voice recording transcript and provide:
 
@@ -79,6 +95,7 @@ async function processTranscript(transcript: string): Promise<{
 2. Relevant professional tags (5-8 tags) that categorize the content (e.g., meeting, idea, task, reminder, project, etc.)
 3. Key points extracted from the content - important insights, decisions, or information mentioned
 4. Actionable tasks or to-dos mentioned in the recording
+5. Sentiment analysis of the overall emotional tone and context
 
 Transcript:
 "${transcript}"
@@ -103,7 +120,20 @@ Please respond in the following JSON format:
       "category": "work|personal|meeting|follow-up|research|other",
       "completed": false
     }
-  ]
+  ],
+  "sentiment": {
+    "overall": "positive|negative|neutral",
+    "confidence": 0.85,
+    "emotions": {
+      "joy": 0.2,
+      "sadness": 0.1,
+      "anger": 0.0,
+      "fear": 0.05,
+      "surprise": 0.1,
+      "disgust": 0.0
+    },
+    "tone": "professional|casual|formal|conversational|urgent|calm"
+  }
 }
 
 Instructions:
@@ -111,11 +141,17 @@ Instructions:
 - Only include tasks that are explicitly mentioned or clearly implied as action items
 - Set priority based on urgency/importance mentioned in the recording
 - Use null for deadline if no specific date/time is mentioned
-- If no tasks are mentioned, return an empty array`;
+- If no tasks are mentioned, return an empty array
+- For sentiment analysis:
+  - Overall sentiment should reflect the dominant emotional tone
+  - Confidence should be 0-1 (higher means more certain)
+  - Emotions should be normalized values 0-1 that sum to approximately 1.0
+  - Tone should reflect the communication style and urgency level
+- Base sentiment on content context, speaker's tone indicators, and word choice`;
 
   try {
     const response = await openai.chat.completions.create({
-      model: "gpt-3.5-turbo",
+      model: "gpt-5",
       messages: [
         {
           role: "system",
@@ -142,7 +178,20 @@ Instructions:
       summary: parsed.summary || "Unable to generate summary",
       tags: Array.isArray(parsed.tags) ? parsed.tags : [],
       keyPoints: Array.isArray(parsed.keyPoints) ? parsed.keyPoints : [],
-      tasks: Array.isArray(parsed.tasks) ? parsed.tasks : []
+      tasks: Array.isArray(parsed.tasks) ? parsed.tasks : [],
+      sentiment: parsed.sentiment || {
+        overall: "neutral",
+        confidence: 0.5,
+        emotions: {
+          joy: 0.2,
+          sadness: 0.2,
+          anger: 0.2,
+          fear: 0.2,
+          surprise: 0.1,
+          disgust: 0.1
+        },
+        tone: "conversational"
+      }
     };
 
   } catch (error) {
@@ -160,7 +209,20 @@ Instructions:
       summary: summary || "Voice recording captured",
       tags: basicTags,
       keyPoints: [],
-      tasks: []
+      tasks: [],
+      sentiment: {
+        overall: "neutral",
+        confidence: 0.3,
+        emotions: {
+          joy: 0.2,
+          sadness: 0.2,
+          anger: 0.2,
+          fear: 0.2,
+          surprise: 0.1,
+          disgust: 0.1
+        },
+        tone: "conversational"
+      }
     };
   }
 }
@@ -240,7 +302,7 @@ export async function processAudio(formData: FormData): Promise<ProcessedAudioRe
 
     const rawTranscript = transcription as string;
 
-    // Step 2: Process the transcript to generate summary, tags, key points, and tasks
+    // Step 2: Process the transcript to generate summary, tags, key points, tasks, and sentiment
     const processed = await processTranscript(rawTranscript);
 
     // Step 3: Return structured result
@@ -250,6 +312,7 @@ export async function processAudio(formData: FormData): Promise<ProcessedAudioRe
       tags: processed.tags,
       keyPoints: processed.keyPoints,
       tasks: processed.tasks,
+      sentiment: processed.sentiment,
       rawTranscript: rawTranscript,
       metadata: {
         fileSize: file.size,
@@ -365,6 +428,7 @@ export async function processAudioAdvanced(
       tags: processed.tags,
       keyPoints: processed.keyPoints,
       tasks: processed.tasks,
+      sentiment: processed.sentiment,
       metadata: {
         fileSize: file.size,
         fileName: file.name,
@@ -409,7 +473,7 @@ export async function processAudioAdvanced(
 async function processTranscriptWithStyle(
   transcript: string, 
   style: "professional" | "casual" | "meeting" | "idea" | "task" | undefined = "professional"
-): Promise<{ summary: string; tags: string[]; keyPoints: KeyPoint[]; tasks: Task[] }> {
+): Promise<{ summary: string; tags: string[]; keyPoints: KeyPoint[]; tasks: Task[]; sentiment: SentimentAnalysis }> {
   const stylePrompts = {
     professional: "Focus on key business insights, decisions, and actionable items. Use professional language and structure.",
     casual: "Summarize in a friendly, conversational tone. Highlight main points and interesting ideas.",
@@ -453,15 +517,34 @@ Please respond in the following JSON format:
       "category": "work|personal|meeting|follow-up|research|other",
       "completed": false
     }
-  ]
+  ],
+  "sentiment": {
+    "overall": "positive|negative|neutral",
+    "confidence": 0.85,
+    "emotions": {
+      "joy": 0.2,
+      "sadness": 0.1,
+      "anger": 0.0,
+      "fear": 0.05,
+      "surprise": 0.1,
+      "disgust": 0.0
+    },
+    "tone": "professional|casual|formal|conversational|urgent|calm"
+  }
 }
 
 Include relevant tags from this suggested set but feel free to add others: ${styleTagSets[style].join(", ")}
-Extract 3-7 key points and only include explicitly mentioned tasks.`;
+Extract 3-7 key points and only include explicitly mentioned tasks.
+For sentiment analysis:
+- Overall sentiment should reflect the dominant emotional tone with ${style} context in mind
+- Confidence should be 0-1 (higher means more certain about the sentiment)
+- Emotions should be normalized values 0-1 that sum to approximately 1.0
+- Tone should reflect the communication style, urgency level, and ${style} characteristics
+- Base sentiment on content context, implied emotional state, and word choice patterns`;
 
   try {
     const response = await openai.chat.completions.create({
-      model: "gpt-3.5-turbo",
+      model: "gpt-5",
       messages: [
         {
           role: "system",
@@ -487,7 +570,20 @@ Extract 3-7 key points and only include explicitly mentioned tasks.`;
       summary: parsed.summary || "Unable to generate summary",
       tags: Array.isArray(parsed.tags) ? parsed.tags : styleTagSets[style],
       keyPoints: Array.isArray(parsed.keyPoints) ? parsed.keyPoints : [],
-      tasks: Array.isArray(parsed.tasks) ? parsed.tasks : []
+      tasks: Array.isArray(parsed.tasks) ? parsed.tasks : [],
+      sentiment: parsed.sentiment || {
+        overall: "neutral",
+        confidence: 0.5,
+        emotions: {
+          joy: 0.2,
+          sadness: 0.2,
+          anger: 0.2,
+          fear: 0.2,
+          surprise: 0.1,
+          disgust: 0.1
+        },
+        tone: style === "professional" ? "professional" : "conversational"
+      }
     };
 
   } catch (error) {
@@ -503,7 +599,20 @@ Extract 3-7 key points and only include explicitly mentioned tasks.`;
       summary: summary || "Voice recording captured",
       tags: styleTagSets[style] || ["voice-note", "unprocessed"],
       keyPoints: [],
-      tasks: []
+      tasks: [],
+      sentiment: {
+        overall: "neutral",
+        confidence: 0.3,
+        emotions: {
+          joy: 0.2,
+          sadness: 0.2,
+          anger: 0.2,
+          fear: 0.2,
+          surprise: 0.1,
+          disgust: 0.1
+        },
+        tone: style === "professional" ? "professional" : "conversational"
+      }
     };
   }
 }

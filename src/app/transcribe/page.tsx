@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
-import { processAudio, ProcessedAudioResult, Task, KeyPoint } from "@/app/actions/transcribe";
+import { processAudio, ProcessedAudioResult, Task, KeyPoint, SentimentAnalysis } from "@/app/actions/transcribe";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -377,24 +377,24 @@ export default function TranscribePage() {
   return (
     <>
       <Header />
-      <div className="min-h-screen bg-gray-50 py-8">
-        <div className="max-w-4xl mx-auto px-4">
-        <div className="text-center mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">
+      <div className="min-h-screen bg-gray-50 py-4 sm:py-8">
+        <div className="max-w-4xl mx-auto px-4 sm:px-6">
+        <div className="text-center mb-6 sm:mb-8">
+          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-2">
             AI Audio Analysis
           </h1>
-          <p className="text-gray-600">
+          <p className="text-sm sm:text-base text-gray-600 px-2">
             Upload an audio file or record directly to get AI-powered summaries, key points, and actionable task lists
           </p>
         </div>
 
-        <Card className="p-8">
+        <Card className="p-4 sm:p-6 lg:p-8">
           {/* Tab Navigation */}
-          <div className="flex justify-center mb-8">
-            <div className="flex bg-gray-100 rounded-lg p-1">
+          <div className="flex justify-center mb-6 sm:mb-8">
+            <div className="flex bg-gray-100 rounded-lg p-1 w-full max-w-sm">
               <button
                 onClick={() => setActiveTab("upload")}
-                className={`px-6 py-2 rounded-md font-medium transition-colors ${
+                className={`flex-1 px-4 sm:px-6 py-2 rounded-md font-medium text-sm sm:text-base transition-colors ${
                   activeTab === "upload"
                     ? "bg-white text-blue-600 shadow-sm"
                     : "text-gray-500 hover:text-gray-700"
@@ -404,7 +404,7 @@ export default function TranscribePage() {
               </button>
               <button
                 onClick={() => setActiveTab("record")}
-                className={`px-6 py-2 rounded-md font-medium transition-colors ${
+                className={`flex-1 px-4 sm:px-6 py-2 rounded-md font-medium text-sm sm:text-base transition-colors ${
                   activeTab === "record"
                     ? "bg-white text-blue-600 shadow-sm"
                     : "text-gray-500 hover:text-gray-700"
@@ -479,9 +479,9 @@ export default function TranscribePage() {
 
           {/* Record Tab */}
           {activeTab === "record" && (
-            <div className="space-y-6">
+            <div className="space-y-4 sm:space-y-6">
               <div className="text-center">
-                <div className="bg-gray-100 rounded-full w-32 h-32 mx-auto flex items-center justify-center mb-6">
+                <div className="bg-gray-100 rounded-full w-24 h-24 sm:w-32 sm:h-32 mx-auto flex items-center justify-center mb-4 sm:mb-6">
                   {recorder.isRecording ? (
                     <div className="w-12 h-12 bg-red-500 rounded-full animate-pulse flex items-center justify-center">
                       <div className="w-6 h-6 bg-white rounded-sm"></div>
@@ -514,9 +514,9 @@ export default function TranscribePage() {
                   </div>
                 )}
 
-                <div className="flex justify-center space-x-4">
+                <div className="flex flex-col sm:flex-row justify-center items-center gap-3 sm:gap-4">
                   {!recorder.isRecording && !recorder.audioBlob && (
-                    <Button onClick={startRecording} size="lg" className="bg-red-500 hover:bg-red-600">
+                    <Button onClick={startRecording} size="lg" className="bg-red-500 hover:bg-red-600 w-full sm:w-auto">
                       <svg className="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 24 24">
                         <circle cx="12" cy="12" r="10"/>
                       </svg>
@@ -526,14 +526,14 @@ export default function TranscribePage() {
 
                   {recorder.isRecording && !recorder.isPaused && (
                     <>
-                      <Button onClick={pauseRecording} variant="outline" size="lg">
+                      <Button onClick={pauseRecording} variant="outline" size="lg" className="w-full sm:w-auto">
                         <svg className="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 24 24">
                           <rect x="6" y="4" width="4" height="16"/>
                           <rect x="14" y="4" width="4" height="16"/>
                         </svg>
                         Pause
                       </Button>
-                      <Button onClick={stopRecording} variant="destructive" size="lg">
+                      <Button onClick={stopRecording} variant="destructive" size="lg" className="w-full sm:w-auto">
                         <svg className="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 24 24">
                           <rect x="6" y="6" width="12" height="12"/>
                         </svg>
@@ -544,13 +544,13 @@ export default function TranscribePage() {
 
                   {recorder.isPaused && (
                     <>
-                      <Button onClick={resumeRecording} size="lg" className="bg-green-500 hover:bg-green-600">
+                      <Button onClick={resumeRecording} size="lg" className="bg-green-500 hover:bg-green-600 w-full sm:w-auto">
                         <svg className="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 24 24">
                           <polygon points="5,3 19,12 5,21"/>
                         </svg>
                         Resume
                       </Button>
-                      <Button onClick={stopRecording} variant="destructive" size="lg">
+                      <Button onClick={stopRecording} variant="destructive" size="lg" className="w-full sm:w-auto">
                         <svg className="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 24 24">
                           <rect x="6" y="6" width="12" height="12"/>
                         </svg>
@@ -629,12 +629,12 @@ export default function TranscribePage() {
           )}
 
           {/* Transcribe Button */}
-          <div className="mt-8 text-center">
+          <div className="mt-6 sm:mt-8 text-center">
             <Button
               onClick={handleTranscribe}
               disabled={!canTranscribe || isTranscribing}
               size="lg"
-              className="min-w-48"
+              className="w-full sm:w-auto sm:min-w-48"
             >
               {isTranscribing ? (
                 <>
@@ -704,6 +704,100 @@ export default function TranscribePage() {
                             {tag}
                           </Badge>
                         ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Sentiment Analysis Section */}
+                  {processedResult.sentiment && (
+                    <div className="mb-6">
+                      <h4 className="text-md font-medium text-green-900 mb-2">Sentiment Analysis</h4>
+                      <div className="bg-white border border-green-200 rounded-md p-4">
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                          {/* Overall Sentiment */}
+                          <div className="space-y-3">
+                            <div>
+                              <h5 className="text-sm font-medium text-gray-700 mb-2">Overall Sentiment</h5>
+                              <div className="flex items-center space-x-3">
+                                <div className={`w-8 h-8 rounded-full flex items-center justify-center ${
+                                  processedResult.sentiment.overall === 'positive' ? 'bg-green-100' :
+                                  processedResult.sentiment.overall === 'negative' ? 'bg-red-100' : 'bg-gray-100'
+                                }`}>
+                                  {processedResult.sentiment.overall === 'positive' ? '😊' :
+                                   processedResult.sentiment.overall === 'negative' ? '😟' : '😐'}
+                                </div>
+                                <div>
+                                  <Badge 
+                                    variant="outline" 
+                                    className={`text-sm ${
+                                      processedResult.sentiment.overall === 'positive' ? 'border-green-200 text-green-700 bg-green-50' :
+                                      processedResult.sentiment.overall === 'negative' ? 'border-red-200 text-red-700 bg-red-50' :
+                                      'border-gray-200 text-gray-700 bg-gray-50'
+                                    }`}
+                                  >
+                                    {processedResult.sentiment.overall.charAt(0).toUpperCase() + processedResult.sentiment.overall.slice(1)}
+                                  </Badge>
+                                  <p className="text-xs text-gray-500 mt-1">
+                                    Confidence: {Math.round(processedResult.sentiment.confidence * 100)}%
+                                  </p>
+                                </div>
+                              </div>
+                            </div>
+
+                            <div>
+                              <h5 className="text-sm font-medium text-gray-700 mb-2">Communication Tone</h5>
+                              <Badge variant="outline" className="text-sm border-blue-200 text-blue-700 bg-blue-50">
+                                {processedResult.sentiment.tone?.charAt(0).toUpperCase() + (processedResult.sentiment.tone?.slice(1) || '')}
+                              </Badge>
+                            </div>
+                          </div>
+
+                          {/* Emotional Breakdown */}
+                          {processedResult.sentiment.emotions && (
+                            <div>
+                              <h5 className="text-sm font-medium text-gray-700 mb-2">Emotional Breakdown</h5>
+                              <div className="space-y-2">
+                                {Object.entries(processedResult.sentiment.emotions)
+                                  .filter(([_, value]) => value > 0.05) // Only show emotions with >5% presence
+                                  .sort(([, a], [, b]) => b - a) // Sort by strength
+                                  .slice(0, 4) // Show top 4 emotions
+                                  .map(([emotion, value]) => (
+                                  <div key={emotion} className="flex items-center justify-between">
+                                    <div className="flex items-center space-x-2">
+                                      <span className="text-sm capitalize">{emotion}</span>
+                                      <span className="text-xs">
+                                        {emotion === 'joy' ? '😊' :
+                                         emotion === 'sadness' ? '😢' :
+                                         emotion === 'anger' ? '😠' :
+                                         emotion === 'fear' ? '😨' :
+                                         emotion === 'surprise' ? '😲' :
+                                         emotion === 'disgust' ? '🤢' : '😐'}
+                                      </span>
+                                    </div>
+                                    <div className="flex items-center space-x-2">
+                                      <div className="w-16 bg-gray-200 rounded-full h-2">
+                                        <div 
+                                          className={`h-2 rounded-full ${
+                                            emotion === 'joy' ? 'bg-green-500' :
+                                            emotion === 'sadness' ? 'bg-blue-500' :
+                                            emotion === 'anger' ? 'bg-red-500' :
+                                            emotion === 'fear' ? 'bg-purple-500' :
+                                            emotion === 'surprise' ? 'bg-yellow-500' :
+                                            emotion === 'disgust' ? 'bg-orange-500' : 'bg-gray-500'
+                                          }`}
+                                          style={{ width: `${Math.round(value * 100)}%` }}
+                                        ></div>
+                                      </div>
+                                      <span className="text-xs text-gray-500 w-8">
+                                        {Math.round(value * 100)}%
+                                      </span>
+                                    </div>
+                                  </div>
+                                ))}
+                              </div>
+                            </div>
+                          )}
+                        </div>
                       </div>
                     </div>
                   )}
@@ -864,6 +958,7 @@ export default function TranscribePage() {
                       onClick={() => navigator.clipboard.writeText(processedResult.summary || "")}
                       variant="outline"
                       size="sm"
+                      className="flex-1 sm:flex-none min-w-0"
                     >
                       Copy Summary
                     </Button>
@@ -878,6 +973,7 @@ export default function TranscribePage() {
                         }}
                         variant="outline"
                         size="sm"
+                        className="flex-1 sm:flex-none min-w-0"
                       >
                         Copy Key Points
                       </Button>
@@ -893,17 +989,41 @@ export default function TranscribePage() {
                         }}
                         variant="outline"
                         size="sm"
+                        className="flex-1 sm:flex-none min-w-0"
                       >
                         Copy Tasks
                       </Button>
                     )}
+
+                    {processedResult.sentiment && (
+                      <Button
+                        onClick={() => {
+                          const sentimentText = `Sentiment Analysis:
+Overall: ${processedResult.sentiment?.overall} (${Math.round((processedResult.sentiment?.confidence || 0) * 100)}% confidence)
+Tone: ${processedResult.sentiment?.tone}
+${processedResult.sentiment?.emotions ? 
+  'Emotions:\n' + Object.entries(processedResult.sentiment.emotions)
+    .filter(([_, value]) => value > 0.05)
+    .sort(([, a], [, b]) => b - a)
+    .map(([emotion, value]) => `  ${emotion}: ${Math.round(value * 100)}%`)
+    .join('\n') : ''}`;
+                          navigator.clipboard.writeText(sentimentText);
+                        }}
+                        variant="outline"
+                        size="sm"
+                        className="flex-1 sm:flex-none min-w-0"
+                      >
+                        Copy Sentiment
+                      </Button>
+                    )}
+
                     {processedResult.rawTranscript && (
                       <Button
                         onClick={() => {
                           const modal = document.createElement('div');
                           modal.className = 'fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4';
                           modal.innerHTML = `
-                            <div class="bg-white rounded-lg max-w-4xl max-h-96 overflow-auto p-6">
+                            <div class="bg-white rounded-lg max-w-4xl max-h-96 overflow-auto p-6 mx-4">
                               <div class="flex justify-between items-center mb-4">
                                 <h3 class="text-lg font-semibold">Raw Transcript</h3>
                                 <button onclick="this.closest('.fixed').remove()" class="text-gray-500 hover:text-gray-700">
@@ -915,11 +1035,11 @@ export default function TranscribePage() {
                               <div class="bg-gray-50 rounded p-4 text-sm">
                                 <pre class="whitespace-pre-wrap">${processedResult.rawTranscript}</pre>
                               </div>
-                              <div class="mt-4 flex gap-2">
-                                <button onclick="navigator.clipboard.writeText('${processedResult.rawTranscript?.replace(/'/g, "\\'")}'); this.textContent='Copied!'; setTimeout(() => this.textContent='Copy Raw Transcript', 2000)" class="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600">
+                              <div class="mt-4 flex gap-2 flex-col sm:flex-row">
+                                <button onclick="navigator.clipboard.writeText('${processedResult.rawTranscript?.replace(/'/g, "\\'")}'); this.textContent='Copied!'; setTimeout(() => this.textContent='Copy Raw Transcript', 2000)" class="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 flex-1 sm:flex-none">
                                   Copy Raw Transcript
                                 </button>
-                                <button onclick="this.closest('.fixed').remove()" class="px-4 py-2 bg-gray-300 text-gray-700 rounded hover:bg-gray-400">
+                                <button onclick="this.closest('.fixed').remove()" class="px-4 py-2 bg-gray-300 text-gray-700 rounded hover:bg-gray-400 flex-1 sm:flex-none">
                                   Close
                                 </button>
                               </div>
@@ -929,6 +1049,7 @@ export default function TranscribePage() {
                         }}
                         variant="outline"
                         size="sm"
+                        className="flex-1 sm:flex-none min-w-0"
                       >
                         View Raw Transcript
                       </Button>
@@ -940,6 +1061,7 @@ export default function TranscribePage() {
                           tags: processedResult.tags,
                           keyPoints: processedResult.keyPoints,
                           tasks: processedResult.tasks,
+                          sentiment: processedResult.sentiment,
                           metadata: processedResult.metadata,
                           rawTranscript: processedResult.rawTranscript
                         };
@@ -947,6 +1069,7 @@ export default function TranscribePage() {
                       }}
                       variant="outline"
                       size="sm"
+                      className="flex-1 sm:flex-none min-w-0"
                     >
                       Export JSON
                     </Button>
