@@ -151,7 +151,7 @@ Instructions:
 
   try {
     const response = await openai.chat.completions.create({
-      model: "gpt-5",
+      model: "gpt-4.1",
       messages: [
         {
           role: "system",
@@ -544,7 +544,7 @@ For sentiment analysis:
 
   try {
     const response = await openai.chat.completions.create({
-      model: "gpt-5",
+      model: "gpt-4.1",
       messages: [
         {
           role: "system",
