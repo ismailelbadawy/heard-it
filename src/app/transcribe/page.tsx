@@ -18,7 +18,7 @@ interface AudioRecorderState {
 export default function TranscribePage() {
   // File upload state
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
-  
+
   // Recording state
   const [recorder, setRecorder] = useState<{
     isRecording: boolean;
@@ -37,7 +37,7 @@ export default function TranscribePage() {
   // Transcription state
   const [isTranscribing, setIsTranscribing] = useState(false);
   const [processedResult, setProcessedResult] = useState<ProcessedAudioResult | null>(null);
-  
+
   // Active tab state
   const [activeTab, setActiveTab] = useState<"upload" | "record">("upload");
 
@@ -78,19 +78,26 @@ export default function TranscribePage() {
   // Check MediaRecorder support and get best MIME type for current browser
   const getSupportedMimeType = () => {
     const types = [
-      'audio/webm;codecs=opus',
-      'audio/webm',
-      'audio/mp4',
-      'audio/ogg;codecs=opus',
-      'audio/wav'
+      "audio/webm",
+      "audio/webm;codecs=opus",
+      "video/webm", // Sometimes webm is detected as video
+      "audio/mp4",
+      "audio/mpeg",
+      "audio/wav",
+      "audio/ogg",
+      "audio/ogg;codecs=opus",
+      "audio/x-m4a",
+      "audio/m4a",
+      "audio/flac",
+      "audio/opus"
     ];
-    
+
     for (const type of types) {
       if (MediaRecorder.isTypeSupported(type)) {
         return type;
       }
     }
-    
+
     // Fallback for older browsers
     return 'audio/webm';
   };
@@ -110,7 +117,7 @@ export default function TranscribePage() {
       }
 
       // Request microphone access
-      const stream = await navigator.mediaDevices.getUserMedia({ 
+      const stream = await navigator.mediaDevices.getUserMedia({
         audio: {
           echoCancellation: true,
           noiseSuppression: true,
@@ -120,13 +127,13 @@ export default function TranscribePage() {
 
       // Get the best supported MIME type
       const mimeType = getSupportedMimeType();
-      
+
       // Create MediaRecorder with proper options
       const mediaRecorder = new MediaRecorder(stream, {
         mimeType: mimeType,
         audioBitsPerSecond: 128000, // 128 kbps for good quality
       });
-      
+
       mediaRecorderRef.current = mediaRecorder;
       chunksRef.current = [];
 
@@ -140,7 +147,7 @@ export default function TranscribePage() {
         // Create blob with proper MIME type
         const audioBlob = new Blob(chunksRef.current, { type: mimeType });
         const audioUrl = URL.createObjectURL(audioBlob);
-        
+
         setRecorder(prev => ({
           ...prev,
           audioBlob,
@@ -167,7 +174,7 @@ export default function TranscribePage() {
 
       // Start recording with small time slices for better compatibility
       mediaRecorder.start(100); // Collect data every 100ms for better Safari compatibility
-      
+
       setRecorder(prev => ({
         ...prev,
         isRecording: true,
@@ -189,7 +196,7 @@ export default function TranscribePage() {
     } catch (error) {
       console.error("Error starting recording:", error);
       let errorMessage = "Could not access microphone.";
-      
+
       if (error instanceof Error) {
         if (error.name === 'NotAllowedError') {
           errorMessage = "Microphone access denied. Please allow microphone permissions and try again.";
@@ -201,7 +208,7 @@ export default function TranscribePage() {
           errorMessage = "Recording was aborted. Please try again.";
         }
       }
-      
+
       alert(errorMessage);
     }
   };
@@ -234,7 +241,7 @@ export default function TranscribePage() {
         try {
           mediaRecorderRef.current.resume();
           setRecorder(prev => ({ ...prev, isPaused: false }));
-          
+
           // Resume timer
           timerRef.current = setInterval(() => {
             setRecorder(prev => ({
@@ -304,28 +311,28 @@ export default function TranscribePage() {
           "audio/x-m4a": "m4a",
           "audio/m4a": "m4a",
           "audio/flac": "flac",
-          "audio/opus" : "opus"
+          "audio/opus": "opus"
         };
-        
+
         // Try exact match first
         if (mimeToExtension[mimeType]) {
           return mimeToExtension[mimeType];
         }
-        
+
         // Try partial matches
         for (const [mime, ext] of Object.entries(mimeToExtension)) {
           if (mimeType.includes(mime.split(';')[0])) {
             return ext;
           }
         }
-        
+
         // Default fallback
         return "webm";
       };
 
       const extension = getFileExtension(recorder.audioBlob.type);
       const fileName = `recording_${new Date().toISOString().replace(/[:.]/g, '-')}.${extension}`;
-      
+
       audioFile = new File([recorder.audioBlob], fileName, {
         type: recorder.audioBlob.type,
         lastModified: Date.now(),
@@ -372,658 +379,650 @@ export default function TranscribePage() {
     return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + " " + sizes[i];
   };
 
-  const canTranscribe = (activeTab === "upload" && selectedFile) || 
-                       (activeTab === "record" && recorder.audioBlob && !recorder.isRecording);
+  const canTranscribe = (activeTab === "upload" && selectedFile) ||
+    (activeTab === "record" && recorder.audioBlob && !recorder.isRecording);
 
   return (
     <>
       <Header />
       <div className="min-h-screen bg-gray-50 py-4 sm:py-8">
         <div className="max-w-4xl mx-auto px-4 sm:px-6">
-        <div className="text-center mb-6 sm:mb-8">
-          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-2">
-            AI Audio Analysis
-          </h1>
-          <p className="text-sm sm:text-base text-gray-600 px-2">
-            Upload an audio file or record directly to get AI-powered summaries, key points, and actionable task lists
-          </p>
-        </div>
-
-        <Card className="p-4 sm:p-6 lg:p-8">
-          {/* Tab Navigation */}
-          <div className="flex justify-center mb-6 sm:mb-8">
-            <div className="flex bg-gray-100 rounded-lg p-1 w-full max-w-sm">
-              <button
-                onClick={() => setActiveTab("upload")}
-                className={`flex-1 px-4 sm:px-6 py-2 rounded-md font-medium text-sm sm:text-base transition-colors ${
-                  activeTab === "upload"
-                    ? "bg-white text-blue-600 shadow-sm"
-                    : "text-gray-500 hover:text-gray-700"
-                }`}
-              >
-                Upload File
-              </button>
-              <button
-                onClick={() => setActiveTab("record")}
-                className={`flex-1 px-4 sm:px-6 py-2 rounded-md font-medium text-sm sm:text-base transition-colors ${
-                  activeTab === "record"
-                    ? "bg-white text-blue-600 shadow-sm"
-                    : "text-gray-500 hover:text-gray-700"
-                }`}
-              >
-                Record Audio
-              </button>
-            </div>
+          <div className="text-center mb-6 sm:mb-8">
+            <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-2">
+              AI Audio Analysis
+            </h1>
+            <p className="text-sm sm:text-base text-gray-600 px-2">
+              Upload an audio file or record directly to get AI-powered summaries, key points, and actionable task lists
+            </p>
           </div>
 
-          {/* Upload Tab */}
-          {activeTab === "upload" && (
-            <div className="space-y-6">
-              <div>
-                <label htmlFor="audio-upload" className="block text-sm font-medium mb-3">
-                  Choose Audio File
-                </label>
-                <div className="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center hover:border-gray-400 transition-colors">
-                  <input
-                    id="audio-upload"
-                    type="file"
-                    accept="audio/*"
-                    onChange={handleFileChange}
-                    className="hidden"
-                  />
-                  <label
-                    htmlFor="audio-upload"
-                    className="cursor-pointer flex flex-col items-center"
-                  >
-                    <svg
-                      className="w-12 h-12 text-gray-400 mb-4"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"
-                      />
-                    </svg>
-                    <span className="text-lg font-medium text-gray-700">
-                      Click to upload audio file
-                    </span>
-                    <span className="text-sm text-gray-500 mt-1">
-                      MP3, WAV, M4A, WEBM, OGG, FLAC (Max 25MB)
-                    </span>
-                  </label>
-                </div>
+          <Card className="p-4 sm:p-6 lg:p-8">
+            {/* Tab Navigation */}
+            <div className="flex justify-center mb-6 sm:mb-8">
+              <div className="flex bg-gray-100 rounded-lg p-1 w-full max-w-sm">
+                <button
+                  onClick={() => setActiveTab("upload")}
+                  className={`flex-1 px-4 sm:px-6 py-2 rounded-md font-medium text-sm sm:text-base transition-colors ${activeTab === "upload"
+                      ? "bg-white text-blue-600 shadow-sm"
+                      : "text-gray-500 hover:text-gray-700"
+                    }`}
+                >
+                  Upload File
+                </button>
+                <button
+                  onClick={() => setActiveTab("record")}
+                  className={`flex-1 px-4 sm:px-6 py-2 rounded-md font-medium text-sm sm:text-base transition-colors ${activeTab === "record"
+                      ? "bg-white text-blue-600 shadow-sm"
+                      : "text-gray-500 hover:text-gray-700"
+                    }`}
+                >
+                  Record Audio
+                </button>
               </div>
+            </div>
 
-              {selectedFile && (
-                <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-                  <div className="flex items-start justify-between">
-                    <div className="flex-1">
-                      <h4 className="font-medium text-blue-900 mb-2">Selected File</h4>
-                      <div className="space-y-1 text-sm text-blue-700">
-                        <p><strong>Name:</strong> {selectedFile.name}</p>
-                        <p><strong>Size:</strong> {formatFileSize(selectedFile.size)}</p>
-                        <p><strong>Type:</strong> {selectedFile.type}</p>
-                      </div>
-                    </div>
-                    <Badge variant="secondary" className="bg-blue-100 text-blue-800">
-                      Ready
-                    </Badge>
+            {/* Upload Tab */}
+            {activeTab === "upload" && (
+              <div className="space-y-6">
+                <div>
+                  <label htmlFor="audio-upload" className="block text-sm font-medium mb-3">
+                    Choose Audio File
+                  </label>
+                  <div className="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center hover:border-gray-400 transition-colors">
+                    <input
+                      id="audio-upload"
+                      type="file"
+                      accept="audio/*"
+                      onChange={handleFileChange}
+                      className="hidden"
+                    />
+                    <label
+                      htmlFor="audio-upload"
+                      className="cursor-pointer flex flex-col items-center"
+                    >
+                      <svg
+                        className="w-12 h-12 text-gray-400 mb-4"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"
+                        />
+                      </svg>
+                      <span className="text-lg font-medium text-gray-700">
+                        Click to upload audio file
+                      </span>
+                      <span className="text-sm text-gray-500 mt-1">
+                        MP3, WAV, M4A, WEBM, OGG, FLAC (Max 25MB)
+                      </span>
+                    </label>
                   </div>
                 </div>
-              )}
-            </div>
-          )}
 
-          {/* Record Tab */}
-          {activeTab === "record" && (
-            <div className="space-y-4 sm:space-y-6">
-              <div className="text-center">
-                <div className="bg-gray-100 rounded-full w-24 h-24 sm:w-32 sm:h-32 mx-auto flex items-center justify-center mb-4 sm:mb-6">
-                  {recorder.isRecording ? (
-                    <div className="w-12 h-12 bg-red-500 rounded-full animate-pulse flex items-center justify-center">
-                      <div className="w-6 h-6 bg-white rounded-sm"></div>
+                {selectedFile && (
+                  <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                    <div className="flex items-start justify-between">
+                      <div className="flex-1">
+                        <h4 className="font-medium text-blue-900 mb-2">Selected File</h4>
+                        <div className="space-y-1 text-sm text-blue-700">
+                          <p><strong>Name:</strong> {selectedFile.name}</p>
+                          <p><strong>Size:</strong> {formatFileSize(selectedFile.size)}</p>
+                          <p><strong>Type:</strong> {selectedFile.type}</p>
+                        </div>
+                      </div>
+                      <Badge variant="secondary" className="bg-blue-100 text-blue-800">
+                        Ready
+                      </Badge>
                     </div>
-                  ) : (
-                    <svg
-                      className="w-16 h-16 text-gray-400"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z"
-                      />
-                    </svg>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* Record Tab */}
+            {activeTab === "record" && (
+              <div className="space-y-4 sm:space-y-6">
+                <div className="text-center">
+                  <div className="bg-gray-100 rounded-full w-24 h-24 sm:w-32 sm:h-32 mx-auto flex items-center justify-center mb-4 sm:mb-6">
+                    {recorder.isRecording ? (
+                      <div className="w-12 h-12 bg-red-500 rounded-full animate-pulse flex items-center justify-center">
+                        <div className="w-6 h-6 bg-white rounded-sm"></div>
+                      </div>
+                    ) : (
+                      <svg
+                        className="w-16 h-16 text-gray-400"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z"
+                        />
+                      </svg>
+                    )}
+                  </div>
+
+                  {recorder.isRecording && (
+                    <div className="mb-4">
+                      <div className="text-2xl font-mono font-bold text-red-600 mb-2">
+                        {formatTime(recorder.recordingTime)}
+                      </div>
+                      <Badge variant="destructive" className="animate-pulse">
+                        {recorder.isPaused ? "PAUSED" : "RECORDING"}
+                      </Badge>
+                    </div>
                   )}
+
+                  <div className="flex flex-col sm:flex-row justify-center items-center gap-3 sm:gap-4">
+                    {!recorder.isRecording && !recorder.audioBlob && (
+                      <Button onClick={startRecording} size="lg" className="bg-red-500 hover:bg-red-600 w-full sm:w-auto">
+                        <svg className="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 24 24">
+                          <circle cx="12" cy="12" r="10" />
+                        </svg>
+                        Start Recording
+                      </Button>
+                    )}
+
+                    {recorder.isRecording && !recorder.isPaused && (
+                      <>
+                        <Button onClick={pauseRecording} variant="outline" size="lg" className="w-full sm:w-auto">
+                          <svg className="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 24 24">
+                            <rect x="6" y="4" width="4" height="16" />
+                            <rect x="14" y="4" width="4" height="16" />
+                          </svg>
+                          Pause
+                        </Button>
+                        <Button onClick={stopRecording} variant="destructive" size="lg" className="w-full sm:w-auto">
+                          <svg className="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 24 24">
+                            <rect x="6" y="6" width="12" height="12" />
+                          </svg>
+                          Stop
+                        </Button>
+                      </>
+                    )}
+
+                    {recorder.isPaused && (
+                      <>
+                        <Button onClick={resumeRecording} size="lg" className="bg-green-500 hover:bg-green-600 w-full sm:w-auto">
+                          <svg className="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 24 24">
+                            <polygon points="5,3 19,12 5,21" />
+                          </svg>
+                          Resume
+                        </Button>
+                        <Button onClick={stopRecording} variant="destructive" size="lg" className="w-full sm:w-auto">
+                          <svg className="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 24 24">
+                            <rect x="6" y="6" width="12" height="12" />
+                          </svg>
+                          Stop
+                        </Button>
+                      </>
+                    )}
+                  </div>
                 </div>
 
-                {recorder.isRecording && (
-                  <div className="mb-4">
-                    <div className="text-2xl font-mono font-bold text-red-600 mb-2">
-                      {formatTime(recorder.recordingTime)}
+                {/* Browser compatibility info */}
+                {!isMediaRecorderSupported() && (
+                  <div className="bg-amber-50 border border-amber-200 rounded-lg p-4">
+                    <div className="flex items-start">
+                      <svg className="w-5 h-5 text-amber-500 mt-0.5 mr-3 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                        <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                      </svg>
+                      <div>
+                        <h4 className="font-medium text-amber-800 mb-1">Recording Not Supported</h4>
+                        <p className="text-sm text-amber-700">
+                          Audio recording is not supported in this browser. Please try using Chrome, Firefox, or Safari on desktop, or use the file upload option instead.
+                        </p>
+                      </div>
                     </div>
-                    <Badge variant="destructive" className="animate-pulse">
-                      {recorder.isPaused ? "PAUSED" : "RECORDING"}
-                    </Badge>
                   </div>
                 )}
 
-                <div className="flex flex-col sm:flex-row justify-center items-center gap-3 sm:gap-4">
-                  {!recorder.isRecording && !recorder.audioBlob && (
-                    <Button onClick={startRecording} size="lg" className="bg-red-500 hover:bg-red-600 w-full sm:w-auto">
-                      <svg className="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 24 24">
-                        <circle cx="12" cy="12" r="10"/>
+                {/* Recording quality info */}
+                {isMediaRecorderSupported() && (
+                  <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                    <div className="flex items-start">
+                      <svg className="w-5 h-5 text-blue-500 mt-0.5 mr-3 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                        <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
                       </svg>
-                      Start Recording
-                    </Button>
-                  )}
-
-                  {recorder.isRecording && !recorder.isPaused && (
-                    <>
-                      <Button onClick={pauseRecording} variant="outline" size="lg" className="w-full sm:w-auto">
-                        <svg className="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 24 24">
-                          <rect x="6" y="4" width="4" height="16"/>
-                          <rect x="14" y="4" width="4" height="16"/>
-                        </svg>
-                        Pause
-                      </Button>
-                      <Button onClick={stopRecording} variant="destructive" size="lg" className="w-full sm:w-auto">
-                        <svg className="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 24 24">
-                          <rect x="6" y="6" width="12" height="12"/>
-                        </svg>
-                        Stop
-                      </Button>
-                    </>
-                  )}
-
-                  {recorder.isPaused && (
-                    <>
-                      <Button onClick={resumeRecording} size="lg" className="bg-green-500 hover:bg-green-600 w-full sm:w-auto">
-                        <svg className="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 24 24">
-                          <polygon points="5,3 19,12 5,21"/>
-                        </svg>
-                        Resume
-                      </Button>
-                      <Button onClick={stopRecording} variant="destructive" size="lg" className="w-full sm:w-auto">
-                        <svg className="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 24 24">
-                          <rect x="6" y="6" width="12" height="12"/>
-                        </svg>
-                        Stop
-                      </Button>
-                    </>
-                  )}
-                </div>
-              </div>
-
-              {/* Browser compatibility info */}
-              {!isMediaRecorderSupported() && (
-                <div className="bg-amber-50 border border-amber-200 rounded-lg p-4">
-                  <div className="flex items-start">
-                    <svg className="w-5 h-5 text-amber-500 mt-0.5 mr-3 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
-                      <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
-                    </svg>
-                    <div>
-                      <h4 className="font-medium text-amber-800 mb-1">Recording Not Supported</h4>
-                      <p className="text-sm text-amber-700">
-                        Audio recording is not supported in this browser. Please try using Chrome, Firefox, or Safari on desktop, or use the file upload option instead.
-                      </p>
-                    </div>
-                  </div>
-                </div>
-              )}
-
-              {/* Recording quality info */}
-              {isMediaRecorderSupported() && (
-                <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-                  <div className="flex items-start">
-                    <svg className="w-5 h-5 text-blue-500 mt-0.5 mr-3 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
-                      <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
-                    </svg>
-                    <div>
-                      <h4 className="font-medium text-blue-800 mb-1">Recording Tips</h4>
-                      <ul className="text-sm text-blue-700 space-y-1">
-                        <li>• Speak clearly and close to your microphone</li>
-                        <li>• Record in a quiet environment for best results</li>
-                        <li>• Allow microphone permissions when prompted</li>
-                        {navigator.userAgent.includes('Safari') && !navigator.userAgent.includes('Chrome') && (
-                          <li>• On Safari iOS, pause/resume may not be available</li>
-                        )}
-                      </ul>
-                    </div>
-                  </div>
-                </div>
-              )}
-
-              {recorder.audioBlob && recorder.audioUrl && (
-                <div className="bg-green-50 border border-green-200 rounded-lg p-4">
-                  <div className="flex items-center justify-between mb-4">
-                    <h4 className="font-medium text-green-900">Recording Complete</h4>
-                    <div className="flex space-x-2">
-                      <Badge variant="secondary" className="bg-green-100 text-green-800">
-                        {formatTime(recorder.recordingTime)}
-                      </Badge>
-                      <Button
-                        onClick={clearRecording}
-                        variant="outline"
-                        size="sm"
-                        className="text-red-600 border-red-200 hover:bg-red-50"
-                      >
-                        Clear
-                      </Button>
-                    </div>
-                  </div>
-                  <audio
-                    controls
-                    src={recorder.audioUrl}
-                    className="w-full"
-                  />
-                </div>
-              )}
-            </div>
-          )}
-
-          {/* Transcribe Button */}
-          <div className="mt-6 sm:mt-8 text-center">
-            <Button
-              onClick={handleTranscribe}
-              disabled={!canTranscribe || isTranscribing}
-              size="lg"
-              className="w-full sm:w-auto sm:min-w-48"
-            >
-              {isTranscribing ? (
-                <>
-                  <svg
-                    className="animate-spin -ml-1 mr-3 h-5 w-5"
-                    xmlns="http://www.w3.org/2000/svg"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                  >
-                    <circle
-                      className="opacity-25"
-                      cx="12"
-                      cy="12"
-                      r="10"
-                      stroke="currentColor"
-                      strokeWidth="4"
-                    ></circle>
-                    <path
-                      className="opacity-75"
-                      fill="currentColor"
-                      d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                    ></path>
-                  </svg>
-                  Analyzing Audio...
-                </>
-              ) : (
-                "Process Audio"
-              )}
-            </Button>
-          </div>
-
-          {/* Results */}
-          {processedResult && (
-            <div className="mt-8">
-              {processedResult.success ? (
-                <div className="bg-green-50 border border-green-200 rounded-lg p-6">
-                  <div className="flex items-center justify-between mb-4">
-                    <h3 className="text-lg font-semibold text-green-800">
-                      Audio Processing Complete
-                    </h3>
-                    <Badge className="bg-green-100 text-green-800">
-                      Success
-                    </Badge>
-                  </div>
-
-                  {/* Summary Section */}
-                  <div className="mb-6">
-                    <h4 className="text-md font-medium text-green-900 mb-2">Summary</h4>
-                    <div className="bg-white border border-green-200 rounded-md p-4">
-                      <p className="text-gray-800 leading-relaxed">
-                        {processedResult.summary}
-                      </p>
-                    </div>
-                  </div>
-
-                  {/* Tags Section */}
-                  {processedResult.tags && processedResult.tags.length > 0 && (
-                    <div className="mb-6">
-                      <h4 className="text-md font-medium text-green-900 mb-2">Tags</h4>
-                      <div className="flex flex-wrap gap-2">
-                        {processedResult.tags.map((tag, index) => (
-                          <Badge
-                            key={index}
-                            variant="secondary"
-                            className="bg-blue-100 text-blue-800"
-                          >
-                            {tag}
-                          </Badge>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-
-                  {/* Sentiment Analysis Section */}
-                  {processedResult.sentiment && (
-                    <div className="mb-6">
-                      <h4 className="text-md font-medium text-green-900 mb-2">Sentiment Analysis</h4>
-                      <div className="bg-white border border-green-200 rounded-md p-4">
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                          {/* Overall Sentiment */}
-                          <div className="space-y-3">
-                            <div>
-                              <h5 className="text-sm font-medium text-gray-700 mb-2">Overall Sentiment</h5>
-                              <div className="flex items-center space-x-3">
-                                <div className={`w-8 h-8 rounded-full flex items-center justify-center ${
-                                  processedResult.sentiment.overall === 'positive' ? 'bg-green-100' :
-                                  processedResult.sentiment.overall === 'negative' ? 'bg-red-100' : 'bg-gray-100'
-                                }`}>
-                                  {processedResult.sentiment.overall === 'positive' ? '😊' :
-                                   processedResult.sentiment.overall === 'negative' ? '😟' : '😐'}
-                                </div>
-                                <div>
-                                  <Badge 
-                                    variant="outline" 
-                                    className={`text-sm ${
-                                      processedResult.sentiment.overall === 'positive' ? 'border-green-200 text-green-700 bg-green-50' :
-                                      processedResult.sentiment.overall === 'negative' ? 'border-red-200 text-red-700 bg-red-50' :
-                                      'border-gray-200 text-gray-700 bg-gray-50'
-                                    }`}
-                                  >
-                                    {processedResult.sentiment.overall.charAt(0).toUpperCase() + processedResult.sentiment.overall.slice(1)}
-                                  </Badge>
-                                  <p className="text-xs text-gray-500 mt-1">
-                                    Confidence: {Math.round(processedResult.sentiment.confidence * 100)}%
-                                  </p>
-                                </div>
-                              </div>
-                            </div>
-
-                            <div>
-                              <h5 className="text-sm font-medium text-gray-700 mb-2">Communication Tone</h5>
-                              <Badge variant="outline" className="text-sm border-blue-200 text-blue-700 bg-blue-50">
-                                {processedResult.sentiment.tone?.charAt(0).toUpperCase() + (processedResult.sentiment.tone?.slice(1) || '')}
-                              </Badge>
-                            </div>
-                          </div>
-
-                          {/* Emotional Breakdown */}
-                          {processedResult.sentiment.emotions && (
-                            <div>
-                              <h5 className="text-sm font-medium text-gray-700 mb-2">Emotional Breakdown</h5>
-                              <div className="space-y-2">
-                                {Object.entries(processedResult.sentiment.emotions)
-                                  .filter(([_, value]) => value > 0.05) // Only show emotions with >5% presence
-                                  .sort(([, a], [, b]) => b - a) // Sort by strength
-                                  .slice(0, 4) // Show top 4 emotions
-                                  .map(([emotion, value]) => (
-                                  <div key={emotion} className="flex items-center justify-between">
-                                    <div className="flex items-center space-x-2">
-                                      <span className="text-sm capitalize">{emotion}</span>
-                                      <span className="text-xs">
-                                        {emotion === 'joy' ? '😊' :
-                                         emotion === 'sadness' ? '😢' :
-                                         emotion === 'anger' ? '😠' :
-                                         emotion === 'fear' ? '😨' :
-                                         emotion === 'surprise' ? '😲' :
-                                         emotion === 'disgust' ? '🤢' : '😐'}
-                                      </span>
-                                    </div>
-                                    <div className="flex items-center space-x-2">
-                                      <div className="w-16 bg-gray-200 rounded-full h-2">
-                                        <div 
-                                          className={`h-2 rounded-full ${
-                                            emotion === 'joy' ? 'bg-green-500' :
-                                            emotion === 'sadness' ? 'bg-blue-500' :
-                                            emotion === 'anger' ? 'bg-red-500' :
-                                            emotion === 'fear' ? 'bg-purple-500' :
-                                            emotion === 'surprise' ? 'bg-yellow-500' :
-                                            emotion === 'disgust' ? 'bg-orange-500' : 'bg-gray-500'
-                                          }`}
-                                          style={{ width: `${Math.round(value * 100)}%` }}
-                                        ></div>
-                                      </div>
-                                      <span className="text-xs text-gray-500 w-8">
-                                        {Math.round(value * 100)}%
-                                      </span>
-                                    </div>
-                                  </div>
-                                ))}
-                              </div>
-                            </div>
+                      <div>
+                        <h4 className="font-medium text-blue-800 mb-1">Recording Tips</h4>
+                        <ul className="text-sm text-blue-700 space-y-1">
+                          <li>• Speak clearly and close to your microphone</li>
+                          <li>• Record in a quiet environment for best results</li>
+                          <li>• Allow microphone permissions when prompted</li>
+                          {navigator.userAgent.includes('Safari') && !navigator.userAgent.includes('Chrome') && (
+                            <li>• On Safari iOS, pause/resume may not be available</li>
                           )}
-                        </div>
+                        </ul>
                       </div>
                     </div>
-                  )}
+                  </div>
+                )}
 
-                  {/* Key Points Section */}
-                  {processedResult.keyPoints && processedResult.keyPoints.length > 0 && (
-                    <div className="mb-6">
-                      <h4 className="text-md font-medium text-green-900 mb-2">Key Points</h4>
-                      <div className="bg-white border border-green-200 rounded-md p-4">
-                        <div className="space-y-3">
-                          {processedResult.keyPoints.map((keyPoint, index) => (
-                            <div key={index} className="flex items-start space-x-3">
-                              <div className="flex-shrink-0 mt-1">
-                                <div className={`w-2 h-2 rounded-full ${
-                                  keyPoint.importance === 'high' ? 'bg-red-500' :
-                                  keyPoint.importance === 'medium' ? 'bg-yellow-500' : 'bg-green-500'
-                                }`}></div>
-                              </div>
-                              <div className="flex-1">
-                                <p className="text-gray-800 text-sm">{keyPoint.point}</p>
-                                <div className="flex items-center mt-1 space-x-2">
-                                  <Badge 
-                                    variant="outline" 
-                                    className={`text-xs ${
-                                      keyPoint.importance === 'high' ? 'border-red-200 text-red-700' :
-                                      keyPoint.importance === 'medium' ? 'border-yellow-200 text-yellow-700' :
-                                      'border-green-200 text-green-700'
-                                    }`}
-                                  >
-                                    {keyPoint.importance}
-                                  </Badge>
-                                  {keyPoint.category && (
-                                    <Badge variant="outline" className="text-xs border-gray-200 text-gray-600">
-                                      {keyPoint.category}
-                                    </Badge>
-                                  )}
-                                </div>
-                              </div>
-                            </div>
-                          ))}
-                        </div>
+                {recorder.audioBlob && recorder.audioUrl && (
+                  <div className="bg-green-50 border border-green-200 rounded-lg p-4">
+                    <div className="flex items-center justify-between mb-4">
+                      <h4 className="font-medium text-green-900">Recording Complete</h4>
+                      <div className="flex space-x-2">
+                        <Badge variant="secondary" className="bg-green-100 text-green-800">
+                          {formatTime(recorder.recordingTime)}
+                        </Badge>
+                        <Button
+                          onClick={clearRecording}
+                          variant="outline"
+                          size="sm"
+                          className="text-red-600 border-red-200 hover:bg-red-50"
+                        >
+                          Clear
+                        </Button>
                       </div>
                     </div>
-                  )}
+                    <audio
+                      controls
+                      src={recorder.audioUrl}
+                      className="w-full"
+                    />
+                  </div>
+                )}
+              </div>
+            )}
 
-                  {/* Tasks Section */}
-                  {processedResult.tasks && processedResult.tasks.length > 0 && (
-                    <div className="mb-6">
-
-                      <h4 className="text-md font-medium text-green-900 mb-2">Tasks & Action Items</h4>
-                      <div className="bg-white border border-green-200 rounded-md p-4">
-                        <div className="space-y-3">
-                          {processedResult.tasks.map((task, index) => (
-                            <div key={index} className="flex items-start space-x-3 p-3 bg-gray-50 rounded-md">
-                              <div className="flex-shrink-0 mt-1">
-                                <input
-                                  type="checkbox" 
-                                  checked={task.completed}
-                                  onChange={(e) => {
-                                    // Update task completion status
-                                    const updatedTasks = [...(processedResult.tasks || [])];
-                                    updatedTasks[index] = { ...task, completed: e.target.checked };
-                                    setProcessedResult(prev => prev ? {
-                                      ...prev,
-                                      tasks: updatedTasks
-                                    } : null);
-                                  }}
-                                  className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500"
-                                  aria-label={`Mark task "${task.title}" as ${task.completed ? 'incomplete' : 'complete'}`}
-                                />
-                              </div>
-                              <div className="flex-1">
-                                <h5 className={`font-medium text-sm ${task.completed ? 'line-through text-gray-500' : 'text-gray-800'}`}>
-                                  {task.title}
-                                </h5>
-                                {task.description && (
-                                  <p className={`text-xs mt-1 ${task.completed ? 'line-through text-gray-400' : 'text-gray-600'}`}>
-                                    {task.description}
-                                  </p>
-                                )}
-                                <div className="flex items-center mt-2 space-x-2">
-                                  <Badge 
-                                    variant="outline" 
-                                    className={`text-xs ${
-                                      task.priority === 'high' ? 'border-red-200 text-red-700 bg-red-50' :
-                                      task.priority === 'medium' ? 'border-yellow-200 text-yellow-700 bg-yellow-50' :
-                                      'border-green-200 text-green-700 bg-green-50'
-                                    }`}
-                                  >
-                                    {task.priority} priority
-                                  </Badge>
-                                  <Badge variant="outline" className="text-xs border-blue-200 text-blue-700 bg-blue-50">
-                                    {task.category}
-                                  </Badge>
-                                  {task.deadline && (
-                                    <Badge variant="outline" className="text-xs border-purple-200 text-purple-700 bg-purple-50">
-                                      Due: {new Date(task.deadline).toLocaleDateString()}
-                                    </Badge>
-                                  )}
-                                </div>
-                              </div>
-                            </div>
-                          ))}
-                        </div>
-                        {/* Tasks Summary */}
-                        <div className="mt-4 pt-3 border-t border-gray-200">
-                          <div className="flex items-center justify-between text-sm text-gray-600">
-                            <span>
-                              {processedResult.tasks.filter(t => t.completed).length} of {processedResult.tasks.length} completed
-                            </span>
-                            <div className="flex space-x-2">
-                              <Button
-                                onClick={() => {
-                                  const taskText = processedResult.tasks?.map(task => 
-                                    `${task.completed ? '✅' : '☐'} ${task.title}${task.description ? ` - ${task.description}` : ''} (${task.priority} priority)`
-                                  ).join('\n');
-                                  navigator.clipboard.writeText(taskText || '');
-                                }}
-                                variant="outline"
-                                size="sm"
-                                className="text-xs"
-                              >
-                                Copy Tasks
-                              </Button>
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  )}
-
-                  {/* Metadata Section */}
-                  {processedResult.metadata && (
-                    <div className="mb-6">
-                      <h4 className="text-md font-medium text-green-900 mb-2">File Information</h4>
-                      <div className="bg-white border border-green-200 rounded-md p-4">
-                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
-                          <div>
-                            <span className="font-medium text-gray-700">File:</span>
-                            <span className="ml-2 text-gray-600">{processedResult.metadata.fileName}</span>
-                          </div>
-                          <div>
-                            <span className="font-medium text-gray-700">Size:</span>
-                            <span className="ml-2 text-gray-600">{formatFileSize(processedResult.metadata.fileSize)}</span>
-                          </div>
-                          <div>
-                            <span className="font-medium text-gray-700">Processed:</span>
-                            <span className="ml-2 text-gray-600">{new Date(processedResult.metadata.processedAt).toLocaleTimeString()}</span>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  )}
-
-                  {/* Action Buttons */}
-                  <div className="flex flex-wrap gap-2">
-                    <Button
-                      onClick={() => navigator.clipboard.writeText(processedResult.summary || "")}
-                      variant="outline"
-                      size="sm"
-                      className="flex-1 sm:flex-none min-w-0"
+            {/* Transcribe Button */}
+            <div className="mt-6 sm:mt-8 text-center">
+              <Button
+                onClick={handleTranscribe}
+                disabled={!canTranscribe || isTranscribing}
+                size="lg"
+                className="w-full sm:w-auto sm:min-w-48"
+              >
+                {isTranscribing ? (
+                  <>
+                    <svg
+                      className="animate-spin -ml-1 mr-3 h-5 w-5"
+                      xmlns="http://www.w3.org/2000/svg"
+                      fill="none"
+                      viewBox="0 0 24 24"
                     >
-                      Copy Summary
-                    </Button>
-                    
-                    {processedResult.keyPoints && processedResult.keyPoints.length > 0 && (
-                      <Button
-                        onClick={() => {
-                          const keyPointsText = processedResult.keyPoints?.map(kp => 
-                            `• ${kp.point} (${kp.importance}${kp.category ? `, ${kp.category}` : ''})`
-                          ).join('\n');
-                          navigator.clipboard.writeText(keyPointsText || '');
-                        }}
-                        variant="outline"
-                        size="sm"
-                        className="flex-1 sm:flex-none min-w-0"
-                      >
-                        Copy Key Points
-                      </Button>
+                      <circle
+                        className="opacity-25"
+                        cx="12"
+                        cy="12"
+                        r="10"
+                        stroke="currentColor"
+                        strokeWidth="4"
+                      ></circle>
+                      <path
+                        className="opacity-75"
+                        fill="currentColor"
+                        d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                      ></path>
+                    </svg>
+                    Analyzing Audio...
+                  </>
+                ) : (
+                  "Process Audio"
+                )}
+              </Button>
+            </div>
+
+            {/* Results */}
+            {processedResult && (
+              <div className="mt-8">
+                {processedResult.success ? (
+                  <div className="bg-green-50 border border-green-200 rounded-lg p-6">
+                    <div className="flex items-center justify-between mb-4">
+                      <h3 className="text-lg font-semibold text-green-800">
+                        Audio Processing Complete
+                      </h3>
+                      <Badge className="bg-green-100 text-green-800">
+                        Success
+                      </Badge>
+                    </div>
+
+                    {/* Summary Section */}
+                    <div className="mb-6">
+                      <h4 className="text-md font-medium text-green-900 mb-2">Summary</h4>
+                      <div className="bg-white border border-green-200 rounded-md p-4">
+                        <p className="text-gray-800 leading-relaxed">
+                          {processedResult.summary}
+                        </p>
+                      </div>
+                    </div>
+
+                    {/* Tags Section */}
+                    {processedResult.tags && processedResult.tags.length > 0 && (
+                      <div className="mb-6">
+                        <h4 className="text-md font-medium text-green-900 mb-2">Tags</h4>
+                        <div className="flex flex-wrap gap-2">
+                          {processedResult.tags.map((tag, index) => (
+                            <Badge
+                              key={index}
+                              variant="secondary"
+                              className="bg-blue-100 text-blue-800"
+                            >
+                              {tag}
+                            </Badge>
+                          ))}
+                        </div>
+                      </div>
                     )}
 
-                    {processedResult.tasks && processedResult.tasks.length > 0 && (
-                      <Button
-                        onClick={() => {
-                          const tasksText = processedResult.tasks?.map(task => 
-                            `${task.completed ? '✅' : '☐'} ${task.title}${task.description ? ` - ${task.description}` : ''} (${task.priority} priority${task.deadline ? `, due: ${task.deadline}` : ''})`
-                          ).join('\n');
-                          navigator.clipboard.writeText(tasksText || '');
-                        }}
-                        variant="outline"
-                        size="sm"
-                        className="flex-1 sm:flex-none min-w-0"
-                      >
-                        Copy Tasks
-                      </Button>
-                    )}
-
+                    {/* Sentiment Analysis Section */}
                     {processedResult.sentiment && (
+                      <div className="mb-6">
+                        <h4 className="text-md font-medium text-green-900 mb-2">Sentiment Analysis</h4>
+                        <div className="bg-white border border-green-200 rounded-md p-4">
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            {/* Overall Sentiment */}
+                            <div className="space-y-3">
+                              <div>
+                                <h5 className="text-sm font-medium text-gray-700 mb-2">Overall Sentiment</h5>
+                                <div className="flex items-center space-x-3">
+                                  <div className={`w-8 h-8 rounded-full flex items-center justify-center ${processedResult.sentiment.overall === 'positive' ? 'bg-green-100' :
+                                      processedResult.sentiment.overall === 'negative' ? 'bg-red-100' : 'bg-gray-100'
+                                    }`}>
+                                    {processedResult.sentiment.overall === 'positive' ? '😊' :
+                                      processedResult.sentiment.overall === 'negative' ? '😟' : '😐'}
+                                  </div>
+                                  <div>
+                                    <Badge
+                                      variant="outline"
+                                      className={`text-sm ${processedResult.sentiment.overall === 'positive' ? 'border-green-200 text-green-700 bg-green-50' :
+                                          processedResult.sentiment.overall === 'negative' ? 'border-red-200 text-red-700 bg-red-50' :
+                                            'border-gray-200 text-gray-700 bg-gray-50'
+                                        }`}
+                                    >
+                                      {processedResult.sentiment.overall.charAt(0).toUpperCase() + processedResult.sentiment.overall.slice(1)}
+                                    </Badge>
+                                    <p className="text-xs text-gray-500 mt-1">
+                                      Confidence: {Math.round(processedResult.sentiment.confidence * 100)}%
+                                    </p>
+                                  </div>
+                                </div>
+                              </div>
+
+                              <div>
+                                <h5 className="text-sm font-medium text-gray-700 mb-2">Communication Tone</h5>
+                                <Badge variant="outline" className="text-sm border-blue-200 text-blue-700 bg-blue-50">
+                                  {processedResult.sentiment.tone?.charAt(0).toUpperCase() + (processedResult.sentiment.tone?.slice(1) || '')}
+                                </Badge>
+                              </div>
+                            </div>
+
+                            {/* Emotional Breakdown */}
+                            {processedResult.sentiment.emotions && (
+                              <div>
+                                <h5 className="text-sm font-medium text-gray-700 mb-2">Emotional Breakdown</h5>
+                                <div className="space-y-2">
+                                  {Object.entries(processedResult.sentiment.emotions)
+                                    .filter(([_, value]) => value > 0.05) // Only show emotions with >5% presence
+                                    .sort(([, a], [, b]) => b - a) // Sort by strength
+                                    .slice(0, 4) // Show top 4 emotions
+                                    .map(([emotion, value]) => (
+                                      <div key={emotion} className="flex items-center justify-between">
+                                        <div className="flex items-center space-x-2">
+                                          <span className="text-sm capitalize">{emotion}</span>
+                                          <span className="text-xs">
+                                            {emotion === 'joy' ? '😊' :
+                                              emotion === 'sadness' ? '😢' :
+                                                emotion === 'anger' ? '😠' :
+                                                  emotion === 'fear' ? '😨' :
+                                                    emotion === 'surprise' ? '😲' :
+                                                      emotion === 'disgust' ? '🤢' : '😐'}
+                                          </span>
+                                        </div>
+                                        <div className="flex items-center space-x-2">
+                                          <div className="w-16 bg-gray-200 rounded-full h-2">
+                                            <div
+                                              className={`h-2 rounded-full ${emotion === 'joy' ? 'bg-green-500' :
+                                                  emotion === 'sadness' ? 'bg-blue-500' :
+                                                    emotion === 'anger' ? 'bg-red-500' :
+                                                      emotion === 'fear' ? 'bg-purple-500' :
+                                                        emotion === 'surprise' ? 'bg-yellow-500' :
+                                                          emotion === 'disgust' ? 'bg-orange-500' : 'bg-gray-500'
+                                                }`}
+                                              style={{ width: `${Math.round(value * 100)}%` }}
+                                            ></div>
+                                          </div>
+                                          <span className="text-xs text-gray-500 w-8">
+                                            {Math.round(value * 100)}%
+                                          </span>
+                                        </div>
+                                      </div>
+                                    ))}
+                                </div>
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Key Points Section */}
+                    {processedResult.keyPoints && processedResult.keyPoints.length > 0 && (
+                      <div className="mb-6">
+                        <h4 className="text-md font-medium text-green-900 mb-2">Key Points</h4>
+                        <div className="bg-white border border-green-200 rounded-md p-4">
+                          <div className="space-y-3">
+                            {processedResult.keyPoints.map((keyPoint, index) => (
+                              <div key={index} className="flex items-start space-x-3">
+                                <div className="flex-shrink-0 mt-1">
+                                  <div className={`w-2 h-2 rounded-full ${keyPoint.importance === 'high' ? 'bg-red-500' :
+                                      keyPoint.importance === 'medium' ? 'bg-yellow-500' : 'bg-green-500'
+                                    }`}></div>
+                                </div>
+                                <div className="flex-1">
+                                  <p className="text-gray-800 text-sm">{keyPoint.point}</p>
+                                  <div className="flex items-center mt-1 space-x-2">
+                                    <Badge
+                                      variant="outline"
+                                      className={`text-xs ${keyPoint.importance === 'high' ? 'border-red-200 text-red-700' :
+                                          keyPoint.importance === 'medium' ? 'border-yellow-200 text-yellow-700' :
+                                            'border-green-200 text-green-700'
+                                        }`}
+                                    >
+                                      {keyPoint.importance}
+                                    </Badge>
+                                    {keyPoint.category && (
+                                      <Badge variant="outline" className="text-xs border-gray-200 text-gray-600">
+                                        {keyPoint.category}
+                                      </Badge>
+                                    )}
+                                  </div>
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Tasks Section */}
+                    {processedResult.tasks && processedResult.tasks.length > 0 && (
+                      <div className="mb-6">
+
+                        <h4 className="text-md font-medium text-green-900 mb-2">Tasks & Action Items</h4>
+                        <div className="bg-white border border-green-200 rounded-md p-4">
+                          <div className="space-y-3">
+                            {processedResult.tasks.map((task, index) => (
+                              <div key={index} className="flex items-start space-x-3 p-3 bg-gray-50 rounded-md">
+                                <div className="flex-shrink-0 mt-1">
+                                  <input
+                                    type="checkbox"
+                                    checked={task.completed}
+                                    onChange={(e) => {
+                                      // Update task completion status
+                                      const updatedTasks = [...(processedResult.tasks || [])];
+                                      updatedTasks[index] = { ...task, completed: e.target.checked };
+                                      setProcessedResult(prev => prev ? {
+                                        ...prev,
+                                        tasks: updatedTasks
+                                      } : null);
+                                    }}
+                                    className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500"
+                                    aria-label={`Mark task "${task.title}" as ${task.completed ? 'incomplete' : 'complete'}`}
+                                  />
+                                </div>
+                                <div className="flex-1">
+                                  <h5 className={`font-medium text-sm ${task.completed ? 'line-through text-gray-500' : 'text-gray-800'}`}>
+                                    {task.title}
+                                  </h5>
+                                  {task.description && (
+                                    <p className={`text-xs mt-1 ${task.completed ? 'line-through text-gray-400' : 'text-gray-600'}`}>
+                                      {task.description}
+                                    </p>
+                                  )}
+                                  <div className="flex items-center mt-2 space-x-2">
+                                    <Badge
+                                      variant="outline"
+                                      className={`text-xs ${task.priority === 'high' ? 'border-red-200 text-red-700 bg-red-50' :
+                                          task.priority === 'medium' ? 'border-yellow-200 text-yellow-700 bg-yellow-50' :
+                                            'border-green-200 text-green-700 bg-green-50'
+                                        }`}
+                                    >
+                                      {task.priority} priority
+                                    </Badge>
+                                    <Badge variant="outline" className="text-xs border-blue-200 text-blue-700 bg-blue-50">
+                                      {task.category}
+                                    </Badge>
+                                    {task.deadline && (
+                                      <Badge variant="outline" className="text-xs border-purple-200 text-purple-700 bg-purple-50">
+                                        Due: {new Date(task.deadline).toLocaleDateString()}
+                                      </Badge>
+                                    )}
+                                  </div>
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                          {/* Tasks Summary */}
+                          <div className="mt-4 pt-3 border-t border-gray-200">
+                            <div className="flex items-center justify-between text-sm text-gray-600">
+                              <span>
+                                {processedResult.tasks.filter(t => t.completed).length} of {processedResult.tasks.length} completed
+                              </span>
+                              <div className="flex space-x-2">
+                                <Button
+                                  onClick={() => {
+                                    const taskText = processedResult.tasks?.map(task =>
+                                      `${task.completed ? '✅' : '☐'} ${task.title}${task.description ? ` - ${task.description}` : ''} (${task.priority} priority)`
+                                    ).join('\n');
+                                    navigator.clipboard.writeText(taskText || '');
+                                  }}
+                                  variant="outline"
+                                  size="sm"
+                                  className="text-xs"
+                                >
+                                  Copy Tasks
+                                </Button>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Metadata Section */}
+                    {processedResult.metadata && (
+                      <div className="mb-6">
+                        <h4 className="text-md font-medium text-green-900 mb-2">File Information</h4>
+                        <div className="bg-white border border-green-200 rounded-md p-4">
+                          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
+                            <div>
+                              <span className="font-medium text-gray-700">File:</span>
+                              <span className="ml-2 text-gray-600">{processedResult.metadata.fileName}</span>
+                            </div>
+                            <div>
+                              <span className="font-medium text-gray-700">Size:</span>
+                              <span className="ml-2 text-gray-600">{formatFileSize(processedResult.metadata.fileSize)}</span>
+                            </div>
+                            <div>
+                              <span className="font-medium text-gray-700">Processed:</span>
+                              <span className="ml-2 text-gray-600">{new Date(processedResult.metadata.processedAt).toLocaleTimeString()}</span>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Action Buttons */}
+                    <div className="flex flex-wrap gap-2">
                       <Button
-                        onClick={() => {
-                          const sentimentText = `Sentiment Analysis:
+                        onClick={() => navigator.clipboard.writeText(processedResult.summary || "")}
+                        variant="outline"
+                        size="sm"
+                        className="flex-1 sm:flex-none min-w-0"
+                      >
+                        Copy Summary
+                      </Button>
+
+                      {processedResult.keyPoints && processedResult.keyPoints.length > 0 && (
+                        <Button
+                          onClick={() => {
+                            const keyPointsText = processedResult.keyPoints?.map(kp =>
+                              `• ${kp.point} (${kp.importance}${kp.category ? `, ${kp.category}` : ''})`
+                            ).join('\n');
+                            navigator.clipboard.writeText(keyPointsText || '');
+                          }}
+                          variant="outline"
+                          size="sm"
+                          className="flex-1 sm:flex-none min-w-0"
+                        >
+                          Copy Key Points
+                        </Button>
+                      )}
+
+                      {processedResult.tasks && processedResult.tasks.length > 0 && (
+                        <Button
+                          onClick={() => {
+                            const tasksText = processedResult.tasks?.map(task =>
+                              `${task.completed ? '✅' : '☐'} ${task.title}${task.description ? ` - ${task.description}` : ''} (${task.priority} priority${task.deadline ? `, due: ${task.deadline}` : ''})`
+                            ).join('\n');
+                            navigator.clipboard.writeText(tasksText || '');
+                          }}
+                          variant="outline"
+                          size="sm"
+                          className="flex-1 sm:flex-none min-w-0"
+                        >
+                          Copy Tasks
+                        </Button>
+                      )}
+
+                      {processedResult.sentiment && (
+                        <Button
+                          onClick={() => {
+                            const sentimentText = `Sentiment Analysis:
 Overall: ${processedResult.sentiment?.overall} (${Math.round((processedResult.sentiment?.confidence || 0) * 100)}% confidence)
 Tone: ${processedResult.sentiment?.tone}
-${processedResult.sentiment?.emotions ? 
-  'Emotions:\n' + Object.entries(processedResult.sentiment.emotions)
-    .filter(([_, value]) => value > 0.05)
-    .sort(([, a], [, b]) => b - a)
-    .map(([emotion, value]) => `  ${emotion}: ${Math.round(value * 100)}%`)
-    .join('\n') : ''}`;
-                          navigator.clipboard.writeText(sentimentText);
-                        }}
-                        variant="outline"
-                        size="sm"
-                        className="flex-1 sm:flex-none min-w-0"
-                      >
-                        Copy Sentiment
-                      </Button>
-                    )}
+${processedResult.sentiment?.emotions ?
+                                'Emotions:\n' + Object.entries(processedResult.sentiment.emotions)
+                                  .filter(([_, value]) => value > 0.05)
+                                  .sort(([, a], [, b]) => b - a)
+                                  .map(([emotion, value]) => `  ${emotion}: ${Math.round(value * 100)}%`)
+                                  .join('\n') : ''}`;
+                            navigator.clipboard.writeText(sentimentText);
+                          }}
+                          variant="outline"
+                          size="sm"
+                          className="flex-1 sm:flex-none min-w-0"
+                        >
+                          Copy Sentiment
+                        </Button>
+                      )}
 
-                    {processedResult.rawTranscript && (
-                      <Button
-                        onClick={() => {
-                          const modal = document.createElement('div');
-                          modal.className = 'fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4';
-                          modal.innerHTML = `
+                      {processedResult.rawTranscript && (
+                        <Button
+                          onClick={() => {
+                            const modal = document.createElement('div');
+                            modal.className = 'fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4';
+                            modal.innerHTML = `
                             <div class="bg-white rounded-lg max-w-4xl max-h-96 overflow-auto p-6 mx-4">
                               <div class="flex justify-between items-center mb-4">
                                 <h3 class="text-lg font-semibold">Raw Transcript</h3>
@@ -1046,53 +1045,53 @@ ${processedResult.sentiment?.emotions ?
                               </div>
                             </div>
                           `;
-                          document.body.appendChild(modal);
+                            document.body.appendChild(modal);
+                          }}
+                          variant="outline"
+                          size="sm"
+                          className="flex-1 sm:flex-none min-w-0"
+                        >
+                          View Raw Transcript
+                        </Button>
+                      )}
+                      <Button
+                        onClick={() => {
+                          const exportData = {
+                            summary: processedResult.summary,
+                            tags: processedResult.tags,
+                            keyPoints: processedResult.keyPoints,
+                            tasks: processedResult.tasks,
+                            sentiment: processedResult.sentiment,
+                            metadata: processedResult.metadata,
+                            rawTranscript: processedResult.rawTranscript
+                          };
+                          navigator.clipboard.writeText(JSON.stringify(exportData, null, 2));
                         }}
                         variant="outline"
                         size="sm"
                         className="flex-1 sm:flex-none min-w-0"
                       >
-                        View Raw Transcript
+                        Export JSON
                       </Button>
-                    )}
-                    <Button
-                      onClick={() => {
-                        const exportData = {
-                          summary: processedResult.summary,
-                          tags: processedResult.tags,
-                          keyPoints: processedResult.keyPoints,
-                          tasks: processedResult.tasks,
-                          sentiment: processedResult.sentiment,
-                          metadata: processedResult.metadata,
-                          rawTranscript: processedResult.rawTranscript
-                        };
-                        navigator.clipboard.writeText(JSON.stringify(exportData, null, 2));
-                      }}
-                      variant="outline"
-                      size="sm"
-                      className="flex-1 sm:flex-none min-w-0"
-                    >
-                      Export JSON
-                    </Button>
+                    </div>
                   </div>
-                </div>
-              ) : (
-                <div className="bg-red-50 border border-red-200 rounded-lg p-6">
-                  <div className="flex items-center justify-between mb-4">
-                    <h3 className="text-lg font-semibold text-red-800">
-                      Processing Error
-                    </h3>
-                    <Badge variant="destructive">
-                      Error
-                    </Badge>
+                ) : (
+                  <div className="bg-red-50 border border-red-200 rounded-lg p-6">
+                    <div className="flex items-center justify-between mb-4">
+                      <h3 className="text-lg font-semibold text-red-800">
+                        Processing Error
+                      </h3>
+                      <Badge variant="destructive">
+                        Error
+                      </Badge>
+                    </div>
+                    <p className="text-red-700">{processedResult.error}</p>
                   </div>
-                  <p className="text-red-700">{processedResult.error}</p>
-                </div>
-              )}
-            </div>
-          )}
-        </Card>
-      </div>
+                )}
+              </div>
+            )}
+          </Card>
+        </div>
       </div>
     </>
   );
