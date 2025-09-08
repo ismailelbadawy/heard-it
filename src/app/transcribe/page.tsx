@@ -304,6 +304,7 @@ export default function TranscribePage() {
           "audio/x-m4a": "m4a",
           "audio/m4a": "m4a",
           "audio/flac": "flac",
+          "audio/opus" : "opus"
         };
         
         // Try exact match first
